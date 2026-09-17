@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/student/relaxation.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relaxation Zone — MindCare</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/student.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <style>
+    .relax-card { cursor: pointer; transition: transform .2s; }
+    .relax-card:hover { transform: translateY(-4px); }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <div class="avatar" id="user-avatar">S</div>
+      <span id="user-name" style="font-weight:600;">Student</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">My Workspace</div>
+        <a href="dashboard.html"  class="sidebar-link"><span class="link-icon"><i class="bi bi-bar-chart-fill"></i></span> Dashboard</a>
+        <a href="diary.html"      class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Diary</a>
+        <a href="booking.html"    class="sidebar-link"><span class="link-icon"><i class="bi bi-calendar3"></i></span> Book Counselor</a>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+        <a href="forum.html"      class="sidebar-link"><span class="link-icon"><i class="bi bi-chat-dots"></i></span> Anonymous Forum</a>
+      </div>
+      <div class="sidebar-emergency">
+        <p>Need immediate help?</p>
+        <a href="../public/emergency.html">Crisis Helplines</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Relaxation Zone <i class="bi bi-music-note-beamed"></i></h1>
+        <p>Take a moment for yourself — breathe, listen, and reset</p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:1.5rem;">
+        <div class="relax-card" onclick="window.location.href='relaxation/breathing.html'">
+          <img class="relax-card-img" src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&q=80" alt="Breathing exercise">
+          <div class="relax-card-body">
+            <div class="relax-icon"><i class="bi bi-wind"></i></div>
+            <h3>Breathing Exercise</h3>
+            <p>4-7-8 technique for instant calm</p>
+            <button class="btn btn-mint btn-full" style="margin-top:1rem;">Begin Exercise</button>
+          </div>
+        </div>
+
+        <div class="relax-card" onclick="window.location.href='relaxation/music.html'">
+          <img class="relax-card-img" src="https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=500&q=80" alt="Calm music">
+          <div class="relax-card-body">
+            <div class="relax-icon"><i class="bi bi-music-note-beamed"></i></div>
+            <h3>Calm Music</h3>
+            <p>Ambient soundscapes for focus and calm</p>
+            <button class="btn btn-outline btn-full" style="margin-top:1rem;">▶ Play Music</button>
+          </div>
+        </div>
+
+        <div class="relax-card" onclick="window.location.href='relaxation/timer.html'">
+          <img class="relax-card-img" src="https://images.unsplash.com/photo-1545389336-cf090694435e?w=500&q=80" alt="Meditation timer">
+          <div class="relax-card-body">
+            <div class="relax-icon">⏱</div>
+            <h3>Meditation Timer</h3>
+            <p>Guided 5, 10, or 15 minute sessions</p>
+            <button class="btn btn-outline btn-full" style="margin-top:1rem;">Set Timer</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-emergency" style="margin:1.5rem 0 0; max-width:400px;">
+        <p>Need immediate help?</p>
+        <a href="../public/emergency.html">View Crisis Helplines</a>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/auth.js?v=5"></script>
+</body>
+</html>

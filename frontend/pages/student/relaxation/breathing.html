@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breathing Exercise — MindCare</title>
+  <link rel="stylesheet" href="../../../css/global.css">
+  <link rel="stylesheet" href="../../../css/student.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="icon" href="../../../assets/images/logo.png">
+  <style>
+    .breathe-types {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .breathe-type-card {
+      border: 2px solid #eee;
+      border-radius: 14px;
+      padding: 1.1rem .9rem;
+      text-align: center;
+      cursor: pointer;
+      transition: .2s;
+      background: white;
+    }
+    .breathe-type-card:hover, .breathe-type-card.active {
+      border-color: var(--color-mint);
+      background: #F0FAF4;
+    }
+    .breathe-type-icon { font-size: 1.8rem; margin-bottom: .4rem; }
+    .breathe-type-name { font-weight: 700; font-size: 13px; margin-bottom: .2rem; }
+    .breathe-type-desc { font-size: 11px; color: #aaa; line-height: 1.4; }
+    .breathe-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .breathe-ring {
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: var(--color-mint);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #1A5C38;
+      box-shadow: 0 0 50px rgba(152,227,180,0.4);
+      margin-bottom: 1rem;
+    }
+    .breathe-count {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--text);
+      font-family: var(--serif);
+      line-height: 1;
+      margin-bottom: .4rem;
+    }
+    .breathe-phase {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 1.5rem;
+      min-height: 22px;
+    }
+    .pattern-wrap {
+      display: flex;
+      gap: .4rem;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .pattern-step {
+      padding: .25rem .75rem;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--color-beige);
+      color: #8B6914;
+    }
+    .voice-box {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      background: white;
+      border: 2px solid var(--color-mint);
+      border-radius: 12px;
+      padding: .6rem 1rem;
+      margin-top: .75rem;
+      max-width: 320px;
+    }
+    .voice-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--color-mint);
+      flex-shrink: 0;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:.3; transform:scale(.7); }
+    }
+    .guide-box {
+      background: var(--color-beige);
+      border-radius: 14px;
+      padding: 1.25rem 1.5rem;
+    }
+    .guide-box h4 { font-size: 14px; color: #8B6914; margin-bottom: .5rem; }
+    .guide-box p  { font-size: 13px; color: #7A5C00; line-height: 1.8; margin: 0; }
+    .loading-msg { text-align:center; color:#aaa; padding: 2rem; font-size:14px; }
+  </style>
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <a href="../relaxation.html" class="btn btn-ghost btn-sm">← Back</a>
+      <div class="avatar" id="user-avatar">S</div>
+      <span id="user-name" style="font-weight:600;">Student</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">My Workspace</div>
+        <a href="../dashboard.html"  class="sidebar-link"><span class="link-icon"><i class="bi bi-bar-chart-fill"></i></span> Dashboard</a>
+        <a href="../diary.html"      class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Diary</a>
+        <a href="../booking.html"    class="sidebar-link"><span class="link-icon"><i class="bi bi-calendar3"></i></span> Book Counselor</a>
+        <a href="../relaxation.html" class="sidebar-link active"><span class="link-icon"><i class="bi bi-flower1"></i></span> Relaxation Zone</a>
+        <a href="../forum.html"      class="sidebar-link"><span class="link-icon"><i class="bi bi-chat-dots"></i></span> Anonymous Forum</a>
+      </div>
+      <div class="sidebar-emergency">
+        <p>Need immediate help?</p>
+        <a href="../../public/emergency.html">Crisis Helplines</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Breathing Exercises <i class="bi bi-wind"></i></h1>
+        <p>Choose a technique and breathe with the circle</p>
+      </div>
+
+      <div class="breathe-types" id="breathe-types">
+        <div class="loading-msg">Loading techniques...</div>
+      </div>
+
+      <div class="two-col" style="gap:2rem; align-items:start;">
+        <div class="breathe-wrap">
+          <div class="pattern-wrap" id="pattern-display"></div>
+
+          <div class="breathe-ring" id="breathe-ring">Ready</div>
+          <div class="breathe-count" id="breathe-count">—</div>
+          <div class="breathe-phase" id="breathe-phase">Select a technique above</div>
+
+          <div style="display:flex; gap:1rem;">
+            <button class="btn btn-mint" id="start-btn" onclick="startBreathing()">Begin</button>
+            <button class="btn btn-ghost" id="stop-btn" onclick="stopBreathing()" style="display:none;">Stop</button>
+          </div>
+
+          <div class="voice-box" id="voice-box" style="display:none;">
+            <div class="voice-dot"></div>
+            <span id="voice-text" style="font-size:13px; color:#555; font-style:italic;"></span>
+          </div>
+        </div>
+
+        <div class="guide-box">
+          <h4 id="guide-title">Select a technique</h4>
+          <p id="guide-desc">Choose a breathing technique from above to get started.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../../js/auth.js?v=5"></script>
+  <script>
+    let techniques = {};
+    let currentKey = null;
+    let countdown  = null;
+    let phaseTimer = null;
+    let running    = false;
+
+    const API_BASE = '../../../../backend/api/relaxation';
+
+    async function loadExercises() {
+      try {
+        const res  = await fetch(`${API_BASE}/breathing.php`);
+        const data = await res.json();
+
+        if (!data.exercises || data.exercises.length === 0) {
+          document.getElementById('breathe-types').innerHTML =
+            '<div class="loading-msg">No exercises found.</div>';
+          return;
+        }
+
+        data.exercises.forEach(ex => {
+          const key = 'ex_' + ex.id;
+          techniques[key] = {
+            id:     ex.id,
+            name:   ex.name,
+            desc:   ex.description,
+            icon:   ex.icon,
+            phases: ex.phases
+          };
+        });
+
+        renderTechniqueCards(data.exercises);
+
+      } catch (err) {
+        console.error('Failed to load exercises:', err);
+        document.getElementById('breathe-types').innerHTML =
+          '<div class="loading-msg" style="color:#e57373;">Failed to load. Check server.</div>';
+      }
+    }
+
+    function renderTechniqueCards(exercises) {
+      const container = document.getElementById('breathe-types');
+      container.innerHTML = exercises.map((ex, i) => {
+        const key = 'ex_' + ex.id;
+        return `
+          <div class="breathe-type-card ${i === 0 ? 'active' : ''}"
+               onclick="selectTechnique('${key}', this)">
+            <div class="breathe-type-icon">${ex.icon || '🌬'}</div>
+            <div class="breathe-type-name">${ex.name}</div>
+            <div class="breathe-type-desc">${ex.description || ''}</div>
+          </div>`;
+      }).join('');
+
+      if (exercises.length > 0) {
+        selectTechnique('ex_' + exercises[0].id, container.querySelector('.breathe-type-card'));
+      }
+    }
+
+    function selectTechnique(key, el) {
+      if (running) return;
+      currentKey = key;
+      document.querySelectorAll('.breathe-type-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+
+      const t = techniques[key];
+      if (!t) return;
+
+      document.getElementById('guide-title').textContent = t.name;
+      document.getElementById('guide-desc').textContent  = t.desc || '';
+
+      const ring = document.getElementById('breathe-ring');
+      ring.textContent   = 'Ready';
+      ring.style.transform = 'scale(1)';
+      if (t.phases && t.phases.length > 0) {
+        ring.style.background = t.phases[0].bg || 'var(--color-mint)';
+      }
+
+      document.getElementById('breathe-count').textContent = '—';
+      document.getElementById('breathe-phase').textContent = 'Press Begin to start';
+
+      if (t.phases && t.phases.length > 0) {
+        const unique = [...new Map(t.phases.map(p => [p.text, p])).values()];
+        document.getElementById('pattern-display').innerHTML = unique.map(p =>
+          `<span class="pattern-step">${p.text} ${p.dur}s</span>`
+        ).join('<span style="color:#ccc;font-size:11px;padding:0 2px;">→</span>');
+      } else {
+        document.getElementById('pattern-display').innerHTML = '';
+      }
+    }
+
+    function startBreathing() {
+      if (!currentKey) return;
+      running = true;
+      document.getElementById('start-btn').style.display = 'none';
+      document.getElementById('stop-btn').style.display  = 'inline-block';
+      document.getElementById('voice-box').style.display = 'flex';
+      playBowl();
+      setTimeout(() => runPhase(0), 1500);
+    }
+
+    function runPhase(i) {
+      if (!running) return;
+      const phases = techniques[currentKey].phases;
+      if (!phases || phases.length === 0) return;
+      const phase = phases[i % phases.length];
+      const ring  = document.getElementById('breathe-ring');
+
+      ring.textContent      = phase.text;
+      ring.style.background = phase.bg || 'var(--color-mint)';
+      ring.style.transform  = `scale(${phase.scale || 1})`;
+      ring.style.transition = `transform ${phase.dur}s ease-in-out, background 0.8s ease`;
+
+      document.getElementById('breathe-phase').textContent = phase.voice || phase.text;
+      document.getElementById('voice-text').textContent    = phase.voice || phase.text;
+      speak(phase.voice || phase.text);
+
+      let secs = phase.dur;
+      document.getElementById('breathe-count').textContent = secs;
+      countdown = setInterval(() => {
+        secs--;
+        document.getElementById('breathe-count').textContent = secs > 0 ? secs : '';
+        if (secs <= 0) clearInterval(countdown);
+      }, 1000);
+
+      phaseTimer = setTimeout(() => runPhase(i + 1), phase.dur * 1000);
+    }
+
+    function stopBreathing() {
+      running = false;
+      clearInterval(countdown);
+      clearTimeout(phaseTimer);
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      const t    = techniques[currentKey];
+      const ring = document.getElementById('breathe-ring');
+      ring.textContent      = 'Ready';
+      ring.style.transform  = 'scale(1)';
+      ring.style.background = (t && t.phases && t.phases[0]) ? t.phases[0].bg : 'var(--color-mint)';
+      document.getElementById('breathe-count').textContent = '—';
+      document.getElementById('breathe-phase').textContent = 'Press Begin to start';
+      document.getElementById('start-btn').style.display   = 'inline-block';
+      document.getElementById('stop-btn').style.display    = 'none';
+      document.getElementById('voice-box').style.display   = 'none';
+    }
+
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.78; u.pitch = 0.9; u.volume = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const v = voices.find(v => v.name.includes('Samantha') || v.name.includes('Karen') || v.lang === 'en-GB');
+      if (v) u.voice = v;
+      window.speechSynthesis.speak(u);
+    }
+
+    function playBowl() {
+      try {
+        const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = 528; osc.type = 'sine';
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.2);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 3);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 3);
+      } catch(e) {}
+    }
+
+    window.speechSynthesis?.getVoices();
+    loadExercises();
+  </script>
+</body>
+</html>
