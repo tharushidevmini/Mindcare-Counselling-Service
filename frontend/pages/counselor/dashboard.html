@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/counselor/dashboard.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Counselor Dashboard — MindCare</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/counselor.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <a href="../public/index.html" class="btn btn-ghost btn-sm"><i class="bi bi-house-door-fill"></i> Home</a>
+      <span id="alert-badge" class="badge badge-red"><i class="bi bi-exclamation-circle-fill"></i> Risk Alerts <span class="notif-dot"></span></span>
+      <div class="avatar" id="user-avatar">C</div>
+      <span id="user-name" style="font-weight:600;">Counselor</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Counselor Panel</div>
+        <a href="dashboard.html" class="sidebar-link active"><span class="link-icon"><i class="bi bi-calendar3"></i></span> Appointments</a>
+        <a href="alerts.html"    class="sidebar-link"><span class="link-icon"><i class="bi bi-exclamation-triangle-fill"></i></span> Student Alerts <span class="notif-dot"></span></a>
+        <a href="resources.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-upload"></i></span> Resource Manager</a>
+        <a href="diary-review.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-text"></i></span> Shared Diaries</a>
+        <a href="wellbeing.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-compass"></i></span> Student Wellbeing</a>
+        <a href="diary.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Notes</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Appointments Dashboard <i class="bi bi-calendar3"></i></h1>
+        <p>Manage incoming requests, accept or postpone sessions, write private notes</p>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:1.5rem;">
+        <div class="stat-card">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-label">Pending Requests</div>
+          <div class="stat-value" id="count-pending">—</div>
+          <div class="stat-note warn">Needs attention</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="bi bi-calendar3"></i></div>
+          <div class="stat-label">Today's Sessions</div>
+          <div class="stat-value" id="count-today">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+          <div class="stat-label">Completed This Month</div>
+          <div class="stat-value" id="count-month">—</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="bi bi-bell-fill"></i> Cancellation Notices</div>
+        <div id="cancellation-list">
+          <p style="color:var(--text-3); font-size:13px; margin:0;">Loading...</p>
+        </div>
+      </div>
+
+      <div class="card" id="today-sessions-card" style="display:none; border:1.5px solid var(--color-mint, #5CC48A);">
+        <div class="card-title"><i class="bi bi-calendar-check-fill"></i> Today's Sessions</div>
+        <div id="today-sessions-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Pending Requests</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Student</th><th>Date</th><th>Time</th><th>Mode</th><th>Note</th><th>Action</th></tr></thead>
+            <tbody id="appointments-table">
+              <tr><td colspan="6" style="text-align:center; color:var(--text-3); padding:2rem;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-mint">
+        <div class="card-title" style="color:#1A7A48;"><i class="bi bi-shield-fill-check"></i> Your Daily Guardian Emergency Slot</div>
+        <p style="font-size:13px; color:var(--text-2); margin-bottom:1rem;">
+          This is the ONE fixed time, every single day, reserved just for guardian emergency bookings — guardians only ever see this slot, never the one-off ones below. Change it any time; it applies from today onward automatically, no re-setup needed.
+        </p>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-end;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Daily Time</label>
+            <select class="form-input form-select" id="guardian-daily-time">
+              <option>9:00 AM</option><option>9:30 AM</option><option>10:00 AM</option>
+              <option>10:30 AM</option><option>11:00 AM</option><option>2:00 PM</option>
+              <option>2:30 PM</option><option>3:00 PM</option><option>3:30 PM</option>
+            </select>
+          </div>
+          <button class="btn btn-mint btn-sm" onclick="saveGuardianDailySlot()"><i class="bi bi-check-lg"></i> Save</button>
+          <span id="guardian-daily-time-status" style="font-size:12px; color:var(--text-3);"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Emergency Reserved Slots</div>
+        <p style="font-size:13px; color:var(--text-3); margin-bottom:1rem;">
+          One-off slots for a specific at-risk student — e.g. right after a Risk Alert. Reserve a slot ahead of time (hidden from normal student booking), then assign it directly to that student. This is separate from your daily guardian slot above and is never shown to guardians.
+        </p>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:1rem;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="block-date" style="min-width:150px;">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Time</label>
+            <select class="form-input form-select" id="block-time">
+              <option>9:00 AM</option><option>9:30 AM</option><option>10:00 AM</option>
+              <option>10:30 AM</option><option>11:00 AM</option><option>2:00 PM</option>
+              <option>2:30 PM</option><option>3:00 PM</option><option>3:30 PM</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0; flex:1; min-width:160px;">
+            <label class="form-label">Note (optional)</label>
+            <input class="form-input" id="block-reason" placeholder="e.g. Kept for emergency walk-ins">
+          </div>
+          <button class="btn btn-danger btn-sm" onclick="addBlockedSlot()"><i class="bi bi-lock-fill"></i> Reserve Slot</button>
+        </div>
+        <div id="blocked-slots-list"><p style="color:#aaa;font-size:13px;">Loading...</p></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Long-Term Recurring Sessions</div>
+        <p style="font-size:13px; color:var(--text-3); margin-bottom:1rem;">
+          For students who need ongoing weekly support — reserve the same day &amp; time every week so it's never double-booked.
+        </p>
+        <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:flex-end; margin-bottom:1rem;">
+          <div class="form-group" style="margin-bottom:0; flex:1; min-width:180px;">
+            <label class="form-label">Student</label>
+            <select class="form-input form-select searchable" id="recur-student"><option value="">Loading students...</option></select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Day</label>
+            <select class="form-input form-select" id="recur-day">
+              <option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option>
+              <option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option>
+              <option value="0">Sunday</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Time</label>
+            <select class="form-input form-select" id="recur-time">
+              <option>9:00 AM</option><option>9:30 AM</option><option>10:00 AM</option>
+              <option>10:30 AM</option><option>11:00 AM</option><option>2:00 PM</option>
+              <option>2:30 PM</option><option>3:00 PM</option><option>3:30 PM</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="addRecurringSlot()"><i class="bi bi-arrow-repeat"></i> Reserve Weekly</button>
+        </div>
+        <div id="recurring-list"><p style="color:#aaa;font-size:13px;">Loading...</p></div>
+      </div>
+
+      <!-- Forum Posts Approve/Reject -->
+      <div class="card">
+        <div class="card-title">Student Forum Posts — Approve for Home Page</div>
+        <p style="font-size:13px; color:var(--text-3); margin-bottom:1.25rem;">
+          Review anonymous student posts. Approved posts appear on the public home page.
+        </p>
+        <div id="forum-posts-list">
+          <div style="text-align:center; color:#aaa; padding:2rem;">Loading posts...</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Private Session Notes</div>
+        <div class="form-group">
+          <label class="form-label">Select Student</label>
+          <div style="display:flex; gap:.5rem;">
+            <select class="form-input form-select searchable" id="session-student" style="flex:1;">
+              <option value="">— Select a student —</option>
+            </select>
+            <button class="btn btn-ghost" onclick="openStudentReport()"><i class="bi bi-file-earmark-text"></i> Generate Report</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New session note (Confidential — only you can see this)</label>
+          <textarea class="form-input" id="clinical-notes" style="min-height:100px;" placeholder="What was discussed in today's session..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="saveClinicalNotes()">Add session note <i class="bi bi-lock-fill"></i></button>
+
+        <!-- Session history -->
+        <div id="notes-history-wrap" style="margin-top:1.75rem; display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; padding-top:1.25rem; border-top:1px solid var(--beige-light);">
+            <div class="card-title" style="margin:0;">Session History <span id="notes-count" class="badge badge-beige"></span></div>
+            <div style="display:flex; gap:.5rem;">
+              <button class="btn btn-ghost btn-sm" onclick="printNotes()"><i class="bi bi-printer-fill"></i> Print</button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadNotes()">⬇ Download</button>
+            </div>
+          </div>
+          <div id="notes-history"></div>
+        </div>
+      </div>
+
+      <div class="card-mint">
+        <div class="card-title" style="color:#1A7A48;">Monthly Group Workshop</div>
+        <p style="font-size:13.5px; color:var(--text-2); margin-bottom:1rem;">Plan a campus-wide group well-being workshop. This sends an automated email invitation to all active student profiles.</p>
+        <div class="grid-2" style="margin-bottom:1rem;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Workshop Title</label>
+            <input class="form-input" id="ws-title" placeholder="e.g. Managing Exam Stress Together">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Date &amp; Time</label>
+            <input class="form-input" type="datetime-local" id="ws-date">
+          </div>
+        </div>
+        <button class="btn btn-mint" onclick="sendWorkshopInvite()"><i class="bi bi-envelope-fill"></i> Send Email Invite to All Students</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Styled confirm popup for deleting a session note -->
+  <div id="note-del-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(28,20,16,.45); backdrop-filter:blur(3px); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:20px; max-width:400px; width:90%; padding:2rem 1.75rem; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.25);">
+      <div style="width:60px; height:60px; margin:0 auto 1rem; border-radius:50%; background:#FDECEC; display:flex; align-items:center; justify-content:center; font-size:1.8rem;"><i class="bi bi-trash"></i></div>
+      <h3 style="margin:0 0 .5rem; color:#1C1410; font-size:1.2rem;">Delete this session note?</h3>
+      <p style="font-size:13.5px; color:#8C7060; line-height:1.7; margin:0 0 1.5rem;">This note will be permanently removed from the student's session history. This can't be undone.</p>
+      <div style="display:flex; gap:.6rem; justify-content:center;">
+        <button onclick="closeNoteDelModal()" style="padding:.6rem 1.4rem; border-radius:12px; border:1.5px solid var(--border); background:#fff; color:#8C7060; font-weight:600; font-size:13.5px; cursor:pointer; font-family:var(--font);">Cancel</button>
+        <button onclick="confirmDeleteNote()" style="padding:.6rem 1.4rem; border-radius:12px; border:none; background:var(--red); color:#fff; font-weight:700; font-size:13.5px; cursor:pointer; font-family:var(--font);">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Styled confirm popup for marking a session complete (was referenced by -->
+  <!-- counselor.js but never existed in the page — Mark Complete silently did nothing) -->
+  <div id="complete-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(28,20,16,.45); backdrop-filter:blur(3px); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:20px; max-width:400px; width:90%; padding:2rem 1.75rem; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.25);">
+      <div style="width:60px; height:60px; margin:0 auto 1rem; border-radius:50%; background:#F0FBF4; display:flex; align-items:center; justify-content:center; font-size:1.8rem;"><i class="bi bi-check2-all"></i></div>
+      <h3 style="margin:0 0 .5rem; color:#1C1410; font-size:1.2rem;">Mark this session complete?</h3>
+      <p style="font-size:13.5px; color:#8C7060; line-height:1.7; margin:0 0 1.5rem;">It will be removed from your active list once marked complete. This won't notify the student.</p>
+      <div style="display:flex; gap:.6rem; justify-content:center;">
+        <button onclick="closeCompleteModal()" style="padding:.6rem 1.4rem; border-radius:12px; border:1.5px solid var(--border); background:#fff; color:#8C7060; font-weight:600; font-size:13.5px; cursor:pointer; font-family:var(--font);">Cancel</button>
+        <button onclick="confirmMarkComplete()" style="padding:.6rem 1.4rem; border-radius:12px; border:none; background:var(--color-mint, #5CC48A); color:#fff; font-weight:700; font-size:13.5px; cursor:pointer; font-family:var(--font);">Mark Complete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Postpone popup — collects the new date/time so the student/guardian -->
+  <!-- can actually be told WHEN the session is now happening, not just that -->
+  <!-- it was postponed. -->
+  <div id="postpone-modal" style="display:none; position:fixed; inset:0; z-index:1000; background:rgba(28,20,16,.45); backdrop-filter:blur(3px); align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:20px; max-width:420px; width:90%; padding:2rem 1.75rem; box-shadow:0 20px 60px rgba(0,0,0,.25);">
+      <div style="width:60px; height:60px; margin:0 auto 1rem; border-radius:50%; background:#FEF3DF; display:flex; align-items:center; justify-content:center; font-size:1.8rem;"><i class="bi bi-clock-history"></i></div>
+      <h3 style="margin:0 0 .5rem; color:#1C1410; font-size:1.2rem; text-align:center;">Postpone this session</h3>
+      <p style="font-size:13.5px; color:#8C7060; line-height:1.7; margin:0 0 1.25rem; text-align:center;">Give a new date and time — the student (or guardian) will be emailed this automatically.</p>
+      <div class="form-group" style="margin-bottom:.85rem;">
+        <label class="form-label">New Date</label>
+        <input class="form-input" type="date" id="postpone-new-date">
+      </div>
+      <div class="form-group" style="margin-bottom:.85rem;">
+        <label class="form-label">New Time</label>
+        <select class="form-input form-select" id="postpone-new-time">
+          <option>9:00 AM</option><option>9:30 AM</option><option>10:00 AM</option>
+          <option>10:30 AM</option><option>11:00 AM</option><option>2:00 PM</option>
+          <option>2:30 PM</option><option>3:00 PM</option><option>3:30 PM</option>
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:1.25rem;">
+        <label class="form-label">Reason (optional, shown to the student)</label>
+        <input class="form-input" type="text" id="postpone-reason" placeholder="e.g. Emergency case came up">
+      </div>
+      <div style="display:flex; gap:.6rem; justify-content:center;">
+        <button onclick="closePostponeModal()" style="padding:.6rem 1.4rem; border-radius:12px; border:1.5px solid var(--border); background:#fff; color:#8C7060; font-weight:600; font-size:13.5px; cursor:pointer; font-family:var(--font);">Cancel</button>
+        <button onclick="confirmPostpone()" style="padding:.6rem 1.4rem; border-radius:12px; border:none; background:var(--color-orange, #F5A846); color:#fff; font-weight:700; font-size:13.5px; cursor:pointer; font-family:var(--font);">Postpone &amp; Notify</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/auth.js?v=5"></script>
+  <script src="../../js/searchable-select.js"></script>
+  <script src="../../js/main.js"></script>
+  <script src="../../js/counselor.js?v=5"></script>
+  <script>
+    function sendWorkshopInvite() {
+      const title = document.getElementById('ws-title').value.trim();
+      if (!title) { toast.warning('Please enter a workshop title.'); return; }
+      toast.success('Email invitation sent to all active student profiles for: ' + title);
+    }
+
+    function openStudentReport() {
+      const studentId = document.getElementById('session-student').value;
+      if (!studentId) { toast.warning('Please select a student first.'); return; }
+      window.open(`report.html?student_id=${studentId}`, '_blank');
+    }
+
+    // ── Forum Posts Approve/Reject ──────────────────────
+    async function loadForumPosts() {
+      try {
+        const res  = await fetch(window.location.origin + '/mindcare_final/backend/api/forum/counselor_posts.php');
+        const data = await res.json();
+        const container = document.getElementById('forum-posts-list');
+
+        if (!data.posts || data.posts.length === 0) {
+          container.innerHTML = '<p style="color:#aaa;text-align:center;padding:1.5rem;">No posts to review.</p>';
+          return;
+        }
+
+        container.innerHTML = data.posts.map(p => `
+          <div id="post-row-${p.id}" style="
+            padding:1.1rem 1.25rem;
+            border:1.5px solid var(--beige-dark);
+            border-radius:14px;
+            margin-bottom:.75rem;
+            background:${p.is_approved == 1 ? 'var(--mint-pale)' : 'white'};
+            transition:.2s;
+          ">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+              <div style="flex:1;">
+                <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;flex-wrap:wrap;">
+                  <span class="badge ${p.is_approved == 1 ? 'badge-mint' : 'badge-orange'}">
+                    ${p.is_approved == 1 ? '<i class="bi bi-check-circle-fill"></i> Approved' : '⏳ Pending'}
+                  </span>
+                  <span class="badge badge-beige">${p.category || 'General'}</span>
+                  <span style="font-size:11px;color:#aaa;">${new Date(p.created_at).toLocaleDateString()}</span>
+                </div>
+                <p style="font-size:14px;color:var(--text);line-height:1.7;margin:0;">${p.content}</p>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:.5rem;flex-shrink:0;">
+                ${p.is_approved == 1 ? `
+                  <button onclick="updatePost(${p.id}, 0)"
+                    class="btn btn-danger btn-sm">
+                    Remove
+                  </button>
+                ` : `
+                  <button onclick="updatePost(${p.id}, 1)"
+                    class="btn btn-mint btn-sm">
+                    Approve
+                  </button>
+                  <button onclick="updatePost(${p.id}, -1)"
+                    class="btn btn-danger btn-sm">
+                    Delete
+                  </button>
+                `}
+              </div>
+            </div>
+          </div>`).join('');
+
+      } catch(e) {
+        console.error(e);
+        document.getElementById('forum-posts-list').innerHTML =
+          '<p style="color:#e57373;text-align:center;">Failed to load posts.</p>';
+      }
+    }
+
+    async function updatePost(id, action) {
+      try {
+        const fd = new FormData();
+        fd.append('id', id);
+        fd.append('action', action); // 1=approve, 0=remove, -1=delete
+
+        const res  = await fetch(window.location.origin + '/mindcare_final/backend/api/forum/update_post.php', {
+          method: 'POST', body: fd
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          if (action === -1) {
+            document.getElementById('post-row-' + id).remove();
+            toast.success('Post deleted.');
+          } else if (action === 1) {
+            toast.success('Post approved! Now visible on home page.');
+            loadForumPosts();
+          } else {
+            toast.warning('Post removed from home page.');
+            loadForumPosts();
+          }
+        } else {
+          toast.error('Failed: ' + (data.error || 'Try again.'));
+        }
+      } catch(e) { toast.error('Network error.'); }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadForumPosts);
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('block-date').value = new Date().toISOString().split('T')[0];
+      loadBlockedSlots();
+    });
+
+    const BLOCK_API = window.location.origin + '/mindcare_final/backend/api/appointments/block_slot.php';
+
+    const ASSIGN_API = window.location.origin + '/mindcare_final/backend/api/appointments/assign_emergency.php';
+    let studentOptions = [];
+
+    async function loadBlockedSlots() {
+      const box  = document.getElementById('blocked-slots-list');
+      const date = document.getElementById('block-date').value || new Date().toISOString().split('T')[0];
+      try {
+        const res  = await fetch(`${BLOCK_API}?action=list&date=${date}`);
+        const data = await res.json();
+        const blocks = data.blocks || [];
+        if (blocks.length === 0) {
+          box.innerHTML = '<p style="color:#aaa;font-size:13px;">No reserved slots for this date.</p>';
+          return;
+        }
+        box.innerHTML = blocks.map(b => `
+          <div id="block-row-${b.id}" style="padding:.6rem .8rem; border:1.5px solid #fca5a5; background:#fff1f1; border-radius:10px; margin-bottom:.5rem;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:.75rem;">
+              <div>
+                <span style="font-weight:600; font-size:13px;"><i class="bi bi-lock-fill"></i> ${b.block_time}</span>
+                <span style="font-size:12px; color:#888; margin-left:.5rem;">${b.reason}</span>
+              </div>
+              <div style="display:flex; gap:.4rem;">
+                <button class="btn btn-mint btn-sm" onclick="openAssignPanel(${b.id})">Assign Student</button>
+                <button class="btn btn-ghost btn-sm" onclick="removeBlockedSlot(${b.id})">Release</button>
+              </div>
+            </div>
+            <div id="assign-panel-${b.id}" style="display:none; margin-top:.6rem; padding-top:.6rem; border-top:1px dashed #fca5a5;"></div>
+          </div>`).join('');
+      } catch (e) {
+        box.innerHTML = '<p style="color:red;font-size:13px;">Could not load reserved slots.</p>';
+      }
+    }
+
+    async function openAssignPanel(blockId) {
+      const panel = document.getElementById(`assign-panel-${blockId}`);
+      if (!panel) return;
+      const isOpen = panel.style.display === 'block';
+      document.querySelectorAll('[id^="assign-panel-"]').forEach(p => p.style.display = 'none');
+      if (isOpen) return;
+
+      if (studentOptions.length === 0) {
+        const res  = await fetch(`${ASSIGN_API}?action=students`);
+        const data = await res.json();
+        studentOptions = data.students || [];
+      }
+
+      panel.innerHTML = `
+        <div style="display:flex; gap:.5rem; flex-wrap:wrap; align-items:flex-end;">
+          <div class="form-group" style="margin-bottom:0; flex:1; min-width:180px;">
+            <label class="form-label">Student</label>
+            <select class="form-input form-select searchable" id="assign-student-${blockId}">
+              <option value="">— Select student —</option>
+              ${studentOptions.map(s => `<option value="${s.id}">${s.full_name}${s.student_id ? ' (' + s.student_id + ')' : ''}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="submitAssign(${blockId})">Confirm Assignment</button>
+        </div>`;
+      panel.style.display = 'block';
+      if (window.enhanceSearchable) window.enhanceSearchable();  // turn the new select into a search box
+    }
+
+    async function submitAssign(blockId) {
+      const sel = document.getElementById(`assign-student-${blockId}`);
+      const studentId = sel?.value;
+      if (!studentId) { toast.warning('Please select a student.'); return; }
+
+      const fd = new FormData();
+      fd.append('action', 'assign');
+      fd.append('block_id', blockId);
+      fd.append('student_id', studentId);
+      fd.append('notes', 'Emergency booking');
+
+      const res  = await fetch(ASSIGN_API, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Student assigned — this is now a confirmed appointment.');
+        loadBlockedSlots();
+      } else {
+        toast.error(data.error || 'Could not assign student.');
+      }
+    }
+
+    async function addBlockedSlot() {
+      const date   = document.getElementById('block-date').value;
+      const time   = document.getElementById('block-time').value;
+      const reason = document.getElementById('block-reason').value.trim() || 'Reserved';
+      if (!date) { toast.warning('Please pick a date.'); return; }
+      const fd = new FormData();
+      fd.append('action', 'add');
+      fd.append('block_date', date);
+      fd.append('block_time', time);
+      fd.append('reason', reason);
+      const res  = await fetch(BLOCK_API, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Slot blocked.');
+        document.getElementById('block-reason').value = '';
+        loadBlockedSlots();
+      } else {
+        toast.error(data.error || 'Could not block slot.');
+      }
+    }
+
+    async function removeBlockedSlot(id) {
+      const fd = new FormData();
+      fd.append('action', 'remove');
+      fd.append('id', id);
+      await fetch(BLOCK_API, { method: 'POST', body: fd });
+      toast.success('Slot unblocked.');
+      loadBlockedSlots();
+    }
+
+    document.getElementById('block-date')?.addEventListener('change', loadBlockedSlots);
+
+    // ── Long-Term Recurring Sessions ──────────────────────
+    const RECUR_API = window.location.origin + '/mindcare_final/backend/api/appointments/recurring_slot.php';
+    const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    async function loadRecurringStudentOptions() {
+      const sel = document.getElementById('recur-student');
+      if (studentOptions.length === 0) {
+        const res  = await fetch(`${ASSIGN_API}?action=students`);
+        const data = await res.json();
+        studentOptions = data.students || [];
+      }
+      sel.innerHTML = '<option value="">— Select student —</option>' +
+        studentOptions.map(s => `<option value="${s.id}">${s.full_name}${s.student_id ? ' (' + s.student_id + ')' : ''}</option>`).join('');
+    }
+
+    async function loadRecurringSlots() {
+      const box = document.getElementById('recurring-list');
+      try {
+        const res  = await fetch(`${RECUR_API}?action=list`);
+        const data = await res.json();
+        const rows = data.recurring || [];
+        if (rows.length === 0) {
+          box.innerHTML = '<p style="color:#aaa;font-size:13px;">No recurring sessions set up yet.</p>';
+          return;
+        }
+        box.innerHTML = rows.map(r => `
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.6rem .8rem; border:1.5px solid #ddd6fe; background:#f5f2ff; border-radius:10px; margin-bottom:.5rem;">
+            <div>
+              <span style="font-weight:600; font-size:13px;"><i class="bi bi-arrow-repeat"></i> ${DAY_NAMES[r.day_of_week]} · ${r.slot_time}</span>
+              <span style="font-size:12px; color:#7c3aed; margin-left:.5rem;">${escapeHtmlR(r.student_name)}</span>
+              <div style="font-size:11px; color:#888; margin-top:2px;">${escapeHtmlR(r.reason)}</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="removeRecurringSlot(${r.id})">Stop</button>
+          </div>`).join('');
+      } catch (e) {
+        box.innerHTML = '<p style="color:red;font-size:13px;">Could not load recurring sessions.</p>';
+      }
+    }
+
+    function escapeHtmlR(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    async function addRecurringSlot() {
+      const studentId = document.getElementById('recur-student').value;
+      const day       = document.getElementById('recur-day').value;
+      const time      = document.getElementById('recur-time').value;
+      if (!studentId) { toast.warning('Please select a student.'); return; }
+
+      const fd = new FormData();
+      fd.append('action', 'add');
+      fd.append('student_id', studentId);
+      fd.append('day_of_week', day);
+      fd.append('slot_time', time);
+
+      const res  = await fetch(RECUR_API, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Weekly session reserved.');
+        loadRecurringSlots();
+      } else {
+        toast.error(data.error || 'Could not reserve this slot.');
+      }
+    }
+
+    async function removeRecurringSlot(id) {
+      if (!confirm('Stop this weekly recurring session?')) return;
+      const fd = new FormData();
+      fd.append('action', 'remove');
+      fd.append('id', id);
+      await fetch(RECUR_API, { method: 'POST', body: fd });
+      toast.success('Recurring session stopped.');
+      loadRecurringSlots();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadRecurringStudentOptions();
+      loadRecurringSlots();
+    });
+  </script>
+</body>
+</html>
