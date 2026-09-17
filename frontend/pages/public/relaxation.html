@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/public/relaxation.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relaxation Zone — MindCare</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <style>
+    /* ── local styles for the public relaxation page ── */
+    .rz-tabs { display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center; margin-bottom:2rem; }
+    .rz-tab {
+      padding:.6rem 1.2rem; border-radius:999px; border:1.5px solid var(--border);
+      background:#fff; cursor:pointer; font-weight:600; font-size:14px; color:var(--text-2);
+      transition:all .15s ease;
+    }
+    .rz-tab.active { background:var(--color-mint); border-color:var(--color-mint); color:#0f5132; }
+    .rz-panel { display:none; }
+    .rz-panel.active { display:block; }
+
+    /* breathing library cards */
+    .breath-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1rem; }
+    .breath-card {
+      border:1.5px solid var(--border); border-radius:14px; padding:1.25rem; background:#fff;
+      cursor:pointer; transition:all .15s ease; text-align:center;
+    }
+    .breath-card:hover { border-color:var(--color-mint); transform:translateY(-2px); box-shadow:0 6px 18px rgba(0,0,0,.06); }
+    .breath-card .bc-icon { font-size:2rem; margin-bottom:.5rem; }
+    .breath-card h4 { margin:0 0 .35rem; font-size:15px; }
+    .breath-card p { margin:0; font-size:12px; color:var(--text-3); line-height:1.5; }
+
+    /* music player */
+    .music-cats { display:flex; gap:.6rem; flex-wrap:wrap; justify-content:center; margin-bottom:1.5rem; }
+    .cat-chip {
+      padding:.5rem 1rem; border-radius:999px; border:1.5px solid var(--border);
+      background:#fff; cursor:pointer; font-size:13px; font-weight:600; color:var(--text-2);
+      display:flex; align-items:center; gap:.4rem; transition:all .15s ease;
+    }
+    .cat-chip.active { background:var(--color-mint); border-color:var(--color-mint); color:#0f5132; }
+    .player {
+      border:1.5px solid var(--border); border-radius:16px; padding:1.5rem; background:#fff;
+      max-width:420px; margin:0 auto 1.5rem; text-align:center;
+    }
+    .player img { width:150px; height:150px; object-fit:cover; border-radius:14px; margin-bottom:1rem; }
+    .player h3 { margin:0 0 .2rem; font-size:1.1rem; }
+    .player .p-sub { color:var(--text-3); font-size:13px; margin:0 0 1rem; }
+    .progress { height:6px; background:var(--border); border-radius:3px; cursor:pointer; margin-bottom:.4rem; overflow:hidden; }
+    .progress-fill { height:100%; background:var(--color-mint); width:0%; transition:width .2s linear; }
+    .p-times { display:flex; justify-content:space-between; font-size:11px; color:var(--text-3); margin-bottom:1rem; }
+    .p-controls { display:flex; gap:1.25rem; justify-content:center; align-items:center; margin-bottom:1rem; }
+    .p-controls button { background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--text-1); }
+    .p-play { width:54px; height:54px; border-radius:50%; background:var(--color-mint)!important; color:#0f5132!important; }
+    .track-list { text-align:left; max-width:420px; margin:0 auto; }
+    .track-item { display:flex; align-items:center; gap:.75rem; padding:.6rem .75rem; border-radius:10px; cursor:pointer; }
+    .track-item:hover { background:#f5f5f5; }
+    .track-item.active { background:var(--color-mint); }
+    .track-num { width:26px; text-align:center; font-size:13px; color:var(--text-3); }
+    .track-item h4 { margin:0; font-size:14px; } .track-item p { margin:0; font-size:11px; color:var(--text-3); }
+
+    /* meditation cards */
+    .med-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:1rem; }
+    .med-card { border:1.5px solid var(--border); border-radius:14px; padding:1.25rem; background:#fff; }
+    .med-card .m-head { display:flex; align-items:center; gap:.6rem; margin-bottom:.6rem; }
+    .med-card .m-icon { font-size:1.6rem; }
+    .med-card h4 { margin:0; font-size:15px; } .med-card .m-desc { font-size:12px; color:var(--text-3); margin:0 0 .75rem; }
+    .med-card ol { margin:0; padding-left:1.1rem; font-size:12.5px; color:var(--text-2); line-height:1.7; }
+    .loading-msg { text-align:center; color:var(--text-3); padding:2rem; font-size:14px; }
+
+    /* voice guide box — shared by breathing + meditation */
+    .voice-box {
+      display: flex; align-items: center; gap: .6rem;
+      background: white; border: 2px solid var(--color-mint); border-radius: 12px;
+      padding: .6rem 1rem; margin: .75rem auto 0; max-width: 340px;
+    }
+    .voice-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-mint); flex-shrink: 0; animation: vpulse 1.5s infinite; }
+    @keyframes vpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.3; transform:scale(.7); } }
+    .bowl-choice.active { background:var(--color-mint); border-color:var(--color-mint); color:#0f5132; font-weight:700; }
+  </style>
+</head>
+<body>
+
+  <nav class="pub-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="pub-nav-links">
+      <a href="index.html" class="pub-nav-link">← Home</a>
+      <a href="library.html" class="pub-nav-link">Library</a>
+      <a href="emergency.html" class="pub-nav-link">Emergency Help</a>
+      <a href="../login.html" class="btn btn-primary">Login</a>
+    </div>
+  </nav>
+
+  <div class="hotline-bar">
+    <strong>Crisis Lines:</strong>
+    <a href="tel:0112692909" class="hotline-chip">Sumithrayo: 011-2692909</a>
+    <a href="tel:1333" class="hotline-chip">CCCline: 1333</a>
+    <a href="tel:1926" class="hotline-chip">National: 1926</a>
+  </div>
+
+  <div style="max-width:900px; margin:0 auto; padding:3rem 1.5rem;">
+
+    <div class="page-header">
+      <h1>Relaxation Zone</h1>
+      <p>Everything here is free — no login required. Breathe, listen, and take a moment for yourself.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="rz-tabs">
+      <div class="rz-tab active" onclick="showTab('breathing', this)"><i class="bi bi-wind"></i> Breathing</div>
+      <div class="rz-tab" onclick="showTab('music', this)"><i class="bi bi-music-note-beamed"></i> Calm Music</div>
+      <div class="rz-tab" onclick="showTab('meditation', this)"><i class="bi bi-flower3"></i> Guided Meditation</div>
+      <div class="rz-tab" onclick="showTab('tools', this)"><i class="bi bi-bell-fill"></i> Bowls &amp; Timer</div>
+    </div>
+
+    <!-- ══════════ BREATHING ══════════ -->
+    <div class="rz-panel active" id="panel-breathing">
+      <!-- Live animated breather -->
+      <div class="card" style="text-align:center; margin-bottom:1.5rem;">
+        <div class="card-title" id="breathe-name">4-7-8 Breathing Exercise</div>
+        <p style="font-size:13px; color:var(--text-3); margin-bottom:1.5rem;" id="breathe-desc">
+          Breathe in 4s · Hold 7s · Breathe out 8s
+        </p>
+        <div style="display:flex; justify-content:center; margin-bottom:1.5rem;">
+          <div id="breathe-text" class="breathe-circle">Ready</div>
+        </div>
+        <div style="display:flex; gap:1rem; justify-content:center;">
+          <button class="btn btn-mint" onclick="runBreathCycle()" id="start-btn">Begin</button>
+          <button class="btn btn-ghost" onclick="stopBreathing()" id="stop-btn" style="display:none;">Stop</button>
+        </div>
+        <div class="voice-box" id="breathe-voice-box" style="display:none;">
+          <div class="voice-dot"></div>
+          <span id="breathe-voice-text" style="font-size:13px; color:#555; font-style:italic;"></span>
+        </div>
+      </div>
+      <!-- Full breathing library from DB -->
+      <h3 style="font-family:var(--serif); text-align:center; margin:2rem 0 1rem;">Choose a Technique</h3>
+      <div class="breath-grid" id="breath-library">
+        <div class="loading-msg">Loading breathing exercises…</div>
+      </div>
+    </div>
+
+    <!-- ══════════ MUSIC ══════════ -->
+    <div class="rz-panel" id="panel-music">
+      <div class="music-cats" id="music-categories">
+        <div class="loading-msg">Loading music…</div>
+      </div>
+      <div class="player" id="player-box" style="display:none;">
+        <img id="music-cover" src="" alt="cover">
+        <h3 id="music-title">—</h3>
+        <p class="p-sub" id="music-sub">—</p>
+        <div class="progress" onclick="seekAudio(event)"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="p-times"><span id="time-current">0:00</span><span id="time-total">—</span></div>
+        <div class="p-controls">
+          <button onclick="prevTrack()"><i class="bi bi-skip-start-fill"></i></button>
+          <button class="p-play" id="play-btn" onclick="togglePlay()"><i class="bi bi-play-fill"></i></button>
+          <button onclick="nextTrack()"><i class="bi bi-skip-end-fill"></i></button>
+        </div>
+        <input type="range" min="0" max="100" value="50" oninput="setVolume(this.value)" style="width:70%;">
+      </div>
+      <div class="track-list" id="track-list-items"></div>
+    </div>
+
+    <!-- ══════════ MEDITATION ══════════ -->
+    <div class="rz-panel" id="panel-meditation">
+      <div class="med-grid" id="meditation-list">
+        <div class="loading-msg">Loading guided meditations…</div>
+      </div>
+
+      <div class="card" id="med-session-box" style="display:none; text-align:center; margin-top:1.5rem;">
+        <div class="card-title" id="med-session-title">—</div>
+        <div class="timer-display" id="med-timer-display">05:00</div>
+        <div class="voice-box" id="med-voice-box" style="display:none;">
+          <div class="voice-dot"></div>
+          <span id="med-voice-text" style="font-size:13px; color:#555; font-style:italic;"></span>
+        </div>
+        <div style="display:flex; gap:1rem; justify-content:center; margin-top:1rem;">
+          <button class="btn btn-mint" id="med-toggle-btn" onclick="toggleMedSession()">Pause</button>
+          <button class="btn btn-ghost" onclick="stopMedSession()">Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ TOOLS (bowls + timer) ══════════ -->
+    <div class="rz-panel" id="panel-tools">
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-title">Singing Bowl Tones</div>
+        <p style="font-size:13px; color:var(--text-3); margin-bottom:1rem;">Pick a tone — it will play continuously for your whole timed session below</p>
+        <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+          <button class="btn btn-ghost bowl-choice active" id="bowl-396" onclick="selectBowl(396, this)">396 Hz — Release Fear</button>
+          <button class="btn btn-ghost bowl-choice" id="bowl-528" onclick="selectBowl(528, this)">528 Hz — Healing</button>
+          <button class="btn btn-ghost bowl-choice" id="bowl-639" onclick="selectBowl(639, this)">639 Hz — Connection</button>
+          <button class="btn btn-ghost bowl-choice" id="bowl-741" onclick="selectBowl(741, this)">741 Hz — Clarity</button>
+        </div>
+        <p style="font-size:12px; color:var(--text-3); margin-top:.6rem;">Selected: <strong id="bowl-selected-label">396 Hz — Release Fear</strong></p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-title">Quick Meditation Timer</div>
+        <div class="timer-display" id="timer-display">05:00</div>
+        <div style="display:flex; gap:.5rem; justify-content:center; margin-bottom:1rem; flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="setTimer(5)">5 min</button>
+          <button class="btn btn-ghost btn-sm" onclick="setTimer(10)">10 min</button>
+          <button class="btn btn-ghost btn-sm" onclick="setTimer(15)">15 min</button>
+          <button class="btn btn-ghost btn-sm" onclick="setTimer(20)">20 min</button>
+        </div>
+        <div style="display:flex; gap:1rem; justify-content:center;">
+          <button class="btn btn-mint" id="timer-toggle-btn" onclick="toggleTimer()">Begin</button>
+          <button class="btn btn-ghost" onclick="resetTimer()">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    </div>
+
+  </div>
+
+  <footer style="text-align:center; padding:2rem; font-size:12px; color:var(--text-3); border-top:1px solid var(--border);">
+    2025 MindCare — LNBTI Campus
+  </footer>
+
+  <script>
+    // API base — public page is 3 levels deep (public → pages → frontend → root)
+    const API = '../../../backend/api/relaxation';
+
+    /* ─────────── Tabs ─────────── */
+    function showTab(name, el) {
+      document.querySelectorAll('.rz-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.rz-panel').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('panel-' + name).classList.add('active');
+
+      // Switching tabs always fully stops whatever was playing in every OTHER
+      // panel — otherwise a session started elsewhere keeps running silently
+      // in the background with no visible Stop button to reach it.
+      if (name !== 'music' && typeof audio !== 'undefined' && playing) {
+        audio.pause(); playing = false;
+        const btn = document.getElementById('play-btn'); if (btn) btn.innerHTML = '<i class="bi bi-play-fill"></i>';
+      }
+      if (name !== 'breathing' && typeof breatheRunning !== 'undefined' && breatheRunning) {
+        stopBreathing();
+      }
+      if (name !== 'meditation' && typeof medRunning !== 'undefined' && medRunning) {
+        stopMedSession();
+      }
+      if (name !== 'tools' && typeof timerRunning !== 'undefined' && timerRunning) {
+        clearInterval(timerInterval); timerRunning = false;
+        const btn = document.getElementById('timer-toggle-btn'); if (btn) btn.textContent = 'Begin';
+        stopBowlLoop();
+      }
+    }
+
+    /* ─────────── Breathing library (from DB) ─────────── */
+    let breathExercises = [];
+
+    async function loadBreathing() {
+      try {
+        const res  = await fetch(`${API}/breathing.php`);
+        const data = await res.json();
+        breathExercises = data.exercises || [];
+        const box = document.getElementById('breath-library');
+        if (breathExercises.length === 0) { box.innerHTML = '<div class="loading-msg">No exercises found.</div>'; return; }
+        box.innerHTML = breathExercises.map((e, i) => `
+          <div class="breath-card" onclick="pickBreathing(${i})">
+            <div class="bc-icon">${e.icon || '🌬️'}</div>
+            <h4>${e.name}</h4>
+            <p>${e.description || ''}</p>
+          </div>`).join('');
+      } catch (err) {
+        document.getElementById('breath-library').innerHTML =
+          '<div class="loading-msg" style="color:#e57373;">Could not load. Is XAMPP running?</div>';
+      }
+    }
+
+    let currentPhases = [
+      { text:'Breathe In',  dur:4, scale:'1.35', bg:'#98E3B4' },
+      { text:'Hold',        dur:7, scale:'1.35', bg:'#E9DBC4' },
+      { text:'Breathe Out', dur:8, scale:'1.0',  bg:'#d0e8f5' },
+    ];
+
+    function pickBreathing(i) {
+      const e = breathExercises[i];
+      currentPhases = e.phases && e.phases.length ? e.phases : currentPhases;
+      document.getElementById('breathe-name').textContent = e.name;
+      document.getElementById('breathe-desc').textContent = e.description || '';
+      stopBreathing();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    let breatheTimeout = null, breatheRunning = false;
+
+    function runBreathCycle() {
+      breatheRunning = true;
+      document.getElementById('start-btn').style.display = 'none';
+      document.getElementById('stop-btn').style.display  = 'inline-flex';
+      document.getElementById('breathe-voice-box').style.display = 'flex';
+      // The circle has a default CSS "breathe 8s" idle pulse (see global.css) —
+      // it fights with the phase-driven transform below, so switch it off
+      // while a real guided cycle is running.
+      document.getElementById('breathe-text').style.animation = 'none';
+      let i = 0;
+      (function next() {
+        if (!breatheRunning) return;
+        const p = currentPhases[i % currentPhases.length];
+        const el = document.getElementById('breathe-text');
+        const dur = (p.dur || 4) * 1000;
+        el.textContent      = p.text;
+        el.style.transition  = `transform ${dur/1000}s ease-in-out, background .8s ease`;
+        // Force a reflow so the browser registers the transition BEFORE the
+        // transform changes below — otherwise the very first phase can jump
+        // instantly instead of animating.
+        void el.offsetWidth;
+        el.style.transform  = `scale(${p.scale || 1})`;
+        el.style.background  = p.bg || 'var(--color-mint)';
+        document.getElementById('breathe-voice-text').textContent = p.voice || p.text;
+        speak(p.voice || p.text);
+        i++;
+        breatheTimeout = setTimeout(next, dur);
+      })();
+    }
+
+    function stopBreathing() {
+      breatheRunning = false;
+      clearTimeout(breatheTimeout);
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      const el = document.getElementById('breathe-text');
+      el.textContent = 'Ready'; el.style.transform = 'scale(1)'; el.style.background = 'var(--color-mint)';
+      el.style.animation = '';   // restore the default idle pulse
+      document.getElementById('start-btn').style.display = 'inline-flex';
+      document.getElementById('stop-btn').style.display  = 'none';
+      document.getElementById('breathe-voice-box').style.display = 'none';
+    }
+
+    /* ─────────── Voice guide (shared: breathing + meditation) ─────────── */
+    function speak(text) {
+      if (!window.speechSynthesis || !text) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.8; u.pitch = 0.9; u.volume = 1.0;
+      const voices = window.speechSynthesis.getVoices();
+      const v = voices.find(v => v.name.includes('Samantha') || v.name.includes('Karen') || v.name.includes('Female') || v.lang === 'en-GB');
+      if (v) u.voice = v;
+      window.speechSynthesis.speak(u);
+    }
+    window.speechSynthesis?.getVoices();
+
+    /* ─────────── Calm Music (from DB) ─────────── */
+    const CAT_ICONS = {
+      calm:  { icon:'<i class="bi bi-leaf"></i>', label:'Calm' }, sleep:{ icon:'<i class="bi bi-moon-stars-fill"></i>', label:'Sleep' },
+      energy:{ icon:'<i class="bi bi-lightning-charge-fill"></i>', label:'Energy' }, water:{ icon:'<i class="bi bi-droplet-fill"></i>', label:'Water' },
+      bowl:  { icon:'<i class="bi bi-bell-fill"></i>', label:'Bowls' },
+    };
+    let allTracks = {}, currentCategory = null, currentTrack = 0;
+    let audio = new Audio(), playing = false;
+
+    audio.addEventListener('timeupdate', () => {
+      if (audio.duration) {
+        document.getElementById('progress-fill').style.width = (audio.currentTime/audio.duration*100) + '%';
+        document.getElementById('time-current').textContent = fmt(audio.currentTime);
+        document.getElementById('time-total').textContent   = fmt(audio.duration);
+      }
+    });
+    audio.addEventListener('ended', nextTrack);
+
+    async function loadMusic() {
+      try {
+        const res  = await fetch(`${API}/music.php`);
+        const data = await res.json();
+        const tracks = data.tracks || [];
+        if (tracks.length === 0) { document.getElementById('music-categories').innerHTML = '<div class="loading-msg">No tracks.</div>'; return; }
+        allTracks = {};
+        tracks.forEach(t => { (allTracks[t.category] = allTracks[t.category] || []).push(t); });
+        const cats = Object.keys(allTracks);
+        document.getElementById('music-categories').innerHTML = cats.map((cat, i) => {
+          const m = CAT_ICONS[cat] || { icon:'<i class="bi bi-music-note-beamed"></i>', label:cat };
+          return `<div class="cat-chip ${i===0?'active':''}" onclick="selectCategory('${cat}', this)">${m.icon} ${m.label}</div>`;
+        }).join('');
+        document.getElementById('player-box').style.display = 'block';
+        selectCategory(cats[0], document.querySelector('.cat-chip'));
+      } catch (err) {
+        document.getElementById('music-categories').innerHTML =
+          '<div class="loading-msg" style="color:#e57373;">Could not load music. Is XAMPP running?</div>';
+      }
+    }
+
+    function selectCategory(key, el) {
+      currentCategory = key; currentTrack = 0;
+      document.querySelectorAll('.cat-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      loadTrack(0);
+      if (playing) audio.play();
+    }
+
+    function loadTrack(i) {
+      currentTrack = i;
+      const tracks = allTracks[currentCategory]; if (!tracks || !tracks.length) return;
+      const t = tracks[i];
+      audio.src = t.audio_url;
+      document.getElementById('music-title').textContent = t.title;
+      document.getElementById('music-sub').textContent   = (t.category||'').charAt(0).toUpperCase() + (t.category||'').slice(1);
+      document.getElementById('music-cover').src = t.cover_url || 'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?w=600&q=80';
+      document.getElementById('progress-fill').style.width = '0%';
+      document.getElementById('time-current').textContent = '0:00';
+      document.getElementById('time-total').textContent   = '—';
+      renderTrackList();
+    }
+
+    function togglePlay() {
+      if (playing) { audio.pause(); playing = false; document.getElementById('play-btn').innerHTML = '<i class="bi bi-play-fill"></i>'; }
+      else { audio.play().catch(()=>alert('Could not play. Check internet connection.')); playing = true; document.getElementById('play-btn').innerHTML = '<i class="bi bi-pause-fill"></i>'; }
+    }
+    function nextTrack() { const t = allTracks[currentCategory]||[]; loadTrack((currentTrack+1)%t.length); if (playing) audio.play(); }
+    function prevTrack() { const t = allTracks[currentCategory]||[]; loadTrack((currentTrack-1+t.length)%t.length); if (playing) audio.play(); }
+    function setVolume(v) { audio.volume = v/100; }
+    function seekAudio(e) { const p = e.offsetX/e.currentTarget.offsetWidth; if (audio.duration) audio.currentTime = p*audio.duration; }
+    function fmt(s) { return Math.floor(s/60) + ':' + String(Math.floor(s%60)).padStart(2,'0'); }
+    function renderTrackList() {
+      const tracks = allTracks[currentCategory] || [];
+      document.getElementById('track-list-items').innerHTML = tracks.map((t, i) => `
+        <div class="track-item ${i===currentTrack?'active':''}" onclick="loadTrack(${i}); if(playing) audio.play();">
+          <div class="track-num">${i===currentTrack && playing ? '<i class="bi bi-soundwave"></i>' : i+1}</div>
+          <div class="track-info"><h4>${t.title}</h4><p>${t.category}</p></div>
+        </div>`).join('');
+    }
+
+    /* ─────────── Guided Meditation (from DB) ─────────── */
+    let medTypes = {};
+
+    async function loadMeditation() {
+      try {
+        const res  = await fetch(`${API}/meditation.php`);
+        const data = await res.json();
+        const types = data.types || [];
+        const box = document.getElementById('meditation-list');
+        if (types.length === 0) { box.innerHTML = '<div class="loading-msg">No meditations found.</div>'; return; }
+        types.forEach((t, i) => { medTypes['med_' + i] = t; });
+        box.innerHTML = types.map((t, i) => `
+          <div class="med-card">
+            <div class="m-head"><span class="m-icon">${t.icon || '🧘'}</span><h4>${t.name}</h4></div>
+            <p class="m-desc">${t.description || ''}</p>
+            <ol>${(t.steps || []).map(s => `<li>${s}</li>`).join('')}</ol>
+            <button class="btn btn-mint btn-sm" style="margin-top:.75rem;" onclick="beginMedSession('med_${i}')">Begin Guided Session</button>
+          </div>`).join('');
+      } catch (err) {
+        document.getElementById('meditation-list').innerHTML =
+          '<div class="loading-msg" style="color:#e57373;">Could not load meditations. Is XAMPP running?</div>';
+      }
+    }
+
+    /* ─────────── Guided meditation session (voice + timer) ─────────── */
+    let medCurrentKey = null, medRunning = false, medTotalSeconds = 300, medRemainingSeconds = 300;
+    let medInterval = null, medGuidanceTimeouts = [], medBgAudio = null;
+
+    function beginMedSession(key) {
+      const t = medTypes[key];
+      if (!t) return;
+      medCurrentKey = key;
+      medTotalSeconds = 300; medRemainingSeconds = 300;
+      document.getElementById('med-session-title').textContent = t.name;
+      document.getElementById('med-session-box').style.display = 'block';
+      document.getElementById('med-toggle-btn').textContent = 'Pause';
+      updateMedDisplay();
+      document.getElementById('med-session-box').scrollIntoView({ behavior:'smooth', block:'center' });
+      startMedSession();
+    }
+
+    function startMedSession() {
+      medRunning = true;
+      document.getElementById('med-voice-box').style.display = 'flex';
+      playBowl(528);
+      if (medCurrentKey) {
+        const t = medTypes[medCurrentKey];
+        if (t.sound_url) { medBgAudio = new Audio(t.sound_url); medBgAudio.loop = true; medBgAudio.volume = 0.35; medBgAudio.play().catch(()=>{}); }
+        const elapsed = medTotalSeconds - medRemainingSeconds;
+        medGuidanceTimeouts = (t.guidance || [])
+          .filter(g => g.time >= elapsed)
+          .map(g => setTimeout(() => { document.getElementById('med-voice-text').textContent = g.text; speak(g.text); }, (g.time - elapsed) * 1000));
+      }
+      medInterval = setInterval(() => {
+        medRemainingSeconds--;
+        updateMedDisplay();
+        if (medRemainingSeconds <= 0) {
+          clearInterval(medInterval);
+          medGuidanceTimeouts.forEach(t => clearTimeout(t));
+          if (medBgAudio) medBgAudio.pause();
+          medRunning = false;
+          document.getElementById('med-voice-box').style.display = 'none';
+          playBowl(528);
+          setTimeout(() => speak('Your session is complete. Well done. Take a gentle moment before you move on.'), 1500);
+        }
+      }, 1000);
+    }
+
+    function toggleMedSession() {
+      if (medRunning) {
+        clearInterval(medInterval);
+        medGuidanceTimeouts.forEach(t => clearTimeout(t));
+        if (medBgAudio) medBgAudio.pause();
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        medRunning = false;
+        document.getElementById('med-toggle-btn').textContent = 'Resume';
+        document.getElementById('med-voice-box').style.display = 'none';
+      } else {
+        document.getElementById('med-toggle-btn').textContent = 'Pause';
+        startMedSession();
+      }
+    }
+
+    function stopMedSession() {
+      clearInterval(medInterval);
+      medGuidanceTimeouts.forEach(t => clearTimeout(t));
+      if (medBgAudio) { medBgAudio.pause(); medBgAudio = null; }
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      medRunning = false;
+      document.getElementById('med-session-box').style.display = 'none';
+    }
+
+    function updateMedDisplay() {
+      const m = Math.floor(medRemainingSeconds / 60), s = medRemainingSeconds % 60;
+      document.getElementById('med-timer-display').textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    }
+
+    /* ─────────── Singing bowls ─────────── */
+    let selectedBowlFreq = 396;
+    const BOWL_LABELS = { 396:'396 Hz — Release Fear', 528:'528 Hz — Healing', 639:'639 Hz — Connection', 741:'741 Hz — Clarity' };
+
+    function selectBowl(freq, el) {
+      selectedBowlFreq = freq;
+      document.querySelectorAll('.bowl-choice').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('bowl-selected-label').textContent = BOWL_LABELS[freq];
+      playBowl(freq);   // short preview so you can hear it before starting the timer
+      // If a session is already running, switch the loop to the newly picked tone
+      if (timerRunning) { stopBowlLoop(); startBowlLoop(freq); }
+    }
+
+    function playBowl(freq) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq; osc.type = 'sine';
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.2);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 4);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 4);
+      } catch(e) {}
+    }
+
+    // Continuous tone for the full length of a timed session — separate from
+    // the short one-shot preview above (this one has no scheduled stop time).
+    let bowlLoopCtx = null, bowlLoopOsc = null, bowlLoopGain = null;
+    function startBowlLoop(freq) {
+      try {
+        bowlLoopCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (bowlLoopCtx.state === 'suspended') bowlLoopCtx.resume();
+        bowlLoopOsc  = bowlLoopCtx.createOscillator();
+        bowlLoopGain = bowlLoopCtx.createGain();
+        bowlLoopOsc.connect(bowlLoopGain); bowlLoopGain.connect(bowlLoopCtx.destination);
+        bowlLoopOsc.frequency.value = freq; bowlLoopOsc.type = 'sine';
+        bowlLoopGain.gain.setValueAtTime(0, bowlLoopCtx.currentTime);
+        bowlLoopGain.gain.linearRampToValueAtTime(0.18, bowlLoopCtx.currentTime + 1);   // gentle fade-in, low volume for a sustained drone
+        bowlLoopOsc.start(bowlLoopCtx.currentTime);   // no stop time — runs until stopBowlLoop() is called
+      } catch(e) {}
+    }
+    function stopBowlLoop() {
+      if (!bowlLoopOsc) return;
+      try {
+        bowlLoopGain.gain.linearRampToValueAtTime(0, bowlLoopCtx.currentTime + 0.5);
+        bowlLoopOsc.stop(bowlLoopCtx.currentTime + 0.6);
+      } catch(e) {}
+      bowlLoopOsc = null; bowlLoopGain = null; bowlLoopCtx = null;
+    }
+
+    /* ─────────── Quick timer ─────────── */
+    let timerSeconds = 300, timerRunning = false, timerInterval = null;
+    function setTimer(min) {
+      clearInterval(timerInterval); timerRunning = false; stopBowlLoop(); timerSeconds = min*60;
+      document.getElementById('timer-display').textContent = formatTime(timerSeconds);
+      document.getElementById('timer-toggle-btn').textContent = 'Begin';
+    }
+    function toggleTimer() {
+      const btn = document.getElementById('timer-toggle-btn');
+      if (timerRunning) {
+        clearInterval(timerInterval); timerRunning = false; btn.textContent = 'Resume';
+        stopBowlLoop();
+      } else {
+        timerRunning = true; btn.textContent = 'Pause';
+        startBowlLoop(selectedBowlFreq);   // plays continuously for the whole session
+        timerInterval = setInterval(() => {
+          timerSeconds--;
+          document.getElementById('timer-display').textContent = formatTime(timerSeconds);
+          if (timerSeconds <= 0) {
+            clearInterval(timerInterval); timerRunning = false; btn.textContent = 'Begin';
+            document.getElementById('timer-display').innerHTML = 'Complete <i class="bi bi-check-lg"></i>';
+            stopBowlLoop();
+            // Non-blocking sound — a blocking alert() here would pause the audio mid-tone
+            playBowl(528);
+          }
+        }, 1000);
+      }
+    }
+    function resetTimer() {
+      clearInterval(timerInterval); timerRunning = false; stopBowlLoop(); timerSeconds = 300;
+      document.getElementById('timer-display').textContent = '05:00';
+      document.getElementById('timer-toggle-btn').textContent = 'Begin';
+    }
+    function formatTime(s) { return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); }
+
+    /* ─────────── Load everything ─────────── */
+    loadBreathing();
+    loadMusic();
+    loadMeditation();
+  </script>
+</body>
+</html>
