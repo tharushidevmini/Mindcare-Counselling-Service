@@ -45,17 +45,18 @@
         </div>
         <input type="hidden" id="selected-role" value="student">
 
+        <form id="login-form" novalidate onsubmit="event.preventDefault(); doLogin(event);">
         <!-- STEP 1: Email -->
         <div id="step-email">
           <h3>Welcome back</h3>
           <p class="login-sub">Enter your campus email to continue</p>
           <div class="form-group">
             <label class="form-label">Campus Email</label>
-            <input class="form-input" type="email" id="login-email"
-              placeholder="yourname@edu.lnbti.lk"
-              onkeydown="if(event.key==='Enter') checkEmail()">
+            <input class="form-input" type="email" id="login-email" name="email"
+              placeholder="yourname@edu.lnbti.lk" autocomplete="email"
+              onkeydown="if(event.key==='Enter') { const p = document.getElementById('login-password'); if(p && p.value.trim()) { doLogin(event); } else { checkEmail(event); } }">
           </div>
-          <button class="btn btn-primary btn-full" id="main-btn" onclick="checkEmail()">Continue →</button>
+          <button type="button" class="btn btn-primary btn-full" id="main-btn" onclick="checkEmail(event)">Continue →</button>
         </div>
 
         <!-- STEP 2a: Returning user -->
@@ -65,20 +66,21 @@
           <div class="form-group">
             <label class="form-label">Password</label>
             <div style="position:relative;">
-              <input class="form-input" type="password" id="login-password"
-                placeholder="Enter your password" style="padding-right:42px;"
-                onkeydown="if(event.key==='Enter') doLogin()">
+              <input class="form-input" type="password" id="login-password" name="password"
+                placeholder="Enter your password" style="padding-right:42px;" autocomplete="current-password"
+                onkeydown="if(event.key==='Enter') doLogin(event)">
               <button type="button" onclick="togglePasswordVisibility('login-password', this)" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-3); padding:4px;">
                 <i class="bi bi-eye"></i>
               </button>
             </div>
           </div>
-          <button class="btn btn-primary btn-full" onclick="doLogin()">Sign In →</button>
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn" onclick="doLogin(event)">Sign In →</button>
           <div style="display:flex; justify-content:space-between; margin-top:1rem;">
             <span style="font-size:13px;color:var(--text-3);cursor:pointer;" onclick="goBack()">← Use a different email</span>
             <span style="font-size:13px;color:var(--orange-dark);cursor:pointer;" onclick="showForgotPassword()">Forgot password?</span>
           </div>
         </div>
+        </form>
 
         <!-- STEP 2c: Forgot password — request code -->
         <div id="step-forgot" style="display:none;">

@@ -10,17 +10,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['error' => 'POST required']); exit;
 }
 
-$email = strtolower(trim($_POST['email'] ?? ''));
+$rawInput  = file_get_contents('php://input');
+$jsonInput = json_decode($rawInput, true) ?? [];
+$email = strtolower(trim($_POST['email'] ?? $jsonInput['email'] ?? ''));
 
 if (!$email) {
     ob_end_clean();
     echo json_encode(['error' => 'Email is required.']); exit;
-}
-
-$domain = substr(strrchr($email, '@'), 1);
-if ($domain !== 'edu.lnbti.lk') {
-    ob_end_clean();
-    echo json_encode(['error' => 'Only @edu.lnbti.lk campus emails are allowed.']); exit;
 }
 
 $stmt = $pdo->prepare("SELECT id FROM users WHERE email = ?");
@@ -30,6 +26,12 @@ $user = $stmt->fetch();
 if ($user) {
     ob_end_clean();
     echo json_encode(['status' => 'existing_user']); exit;
+}
+
+$domain = substr(strrchr($email, '@'), 1);
+if ($domain !== 'edu.lnbti.lk') {
+    ob_end_clean();
+    echo json_encode(['error' => 'Only @edu.lnbti.lk campus emails are allowed.']); exit;
 }
 
 $otp     = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
