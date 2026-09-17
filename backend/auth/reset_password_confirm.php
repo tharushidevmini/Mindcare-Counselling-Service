@@ -39,8 +39,7 @@ if (!$user) {
     echo json_encode(['error' => 'Account not found.']); exit;
 }
 
-$hashed = password_hash($newPassword, PASSWORD_BCRYPT);
-$pdo->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$hashed, $user['id']]);
+$pdo->prepare("UPDATE users SET password = ? WHERE id = ?")->execute([$newPassword, $user['id']]);
 $pdo->prepare("UPDATE password_resets SET is_used = 1 WHERE id = ?")->execute([$reset['id']]);
 
 $log = $pdo->prepare("INSERT INTO system_logs (user_id, action, ip_address) VALUES (?,?,?)");

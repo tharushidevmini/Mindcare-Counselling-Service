@@ -60,8 +60,6 @@ if (!empty($_FILES['photo']['name']) && $_FILES['photo']['error'] === UPLOAD_ERR
     }
 }
 
-$hashed = password_hash($password, PASSWORD_BCRYPT);
-
 // Students self-activate instantly (verified campus email is proof enough —
 // they only ever access their own data). Staff roles (counselor, advisor,
 // admin) get elevated access to other people's sensitive data, so those
@@ -74,7 +72,7 @@ $ins = $pdo->prepare("
     INSERT INTO users (full_name, email, password, role, student_id, photo_url, is_active)
     VALUES (?, ?, ?, ?, ?, ?, ?)
 ");
-$ins->execute([$fullName, $email, $hashed, $role, $studentId, $photoUrl, $isActive]);
+$ins->execute([$fullName, $email, $password, $role, $studentId, $photoUrl, $isActive]);
 $newId = $pdo->lastInsertId();
 
 if ($isStaffRole) {

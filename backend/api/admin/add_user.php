@@ -29,10 +29,9 @@ if (!$studentId && $role === 'student') {
 }
 
 $tempPassword = 'Mind' . rand(1000,9999) . '!';
-$hashed       = password_hash($tempPassword, PASSWORD_BCRYPT);
 
 $stmt = $pdo->prepare("INSERT INTO users (full_name,email,password,role,student_id,is_active) VALUES (?,?,?,?,?,1)");
-$stmt->execute([$name, $email, $hashed, $role, $studentId ?: null]);
+$stmt->execute([$name, $email, $tempPassword, $role, $studentId ?: null]);
 
 echo json_encode(['success'=>true, 'temp_password'=>$tempPassword]);
 ?>

@@ -21,10 +21,9 @@ $user = $u->fetch();
 if (!$user) { echo json_encode(['error'=>'User not found']); exit; }
 
 $tempPassword = 'Mind' . rand(1000, 9999) . '!';
-$hashed       = password_hash($tempPassword, PASSWORD_BCRYPT);
 
 $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
-$stmt->execute([$hashed, $userId]);
+$stmt->execute([$tempPassword, $userId]);
 
 require_once __DIR__ . '/../../helpers/mailer.php';
 use PHPMailer\PHPMailer\Exception;

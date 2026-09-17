@@ -30,7 +30,7 @@ if (!$user) {
 if (!$user['is_active']) {
     echo json_encode(['error' => 'This account is disabled. Contact admin.']); exit;
 }
-if (!password_verify($password, $user['password'])) {
+if ($password !== $user['password']) {
     echo json_encode(['error' => 'Incorrect password.']); exit;
 }
 if ($role && $role !== $user['role']) {
