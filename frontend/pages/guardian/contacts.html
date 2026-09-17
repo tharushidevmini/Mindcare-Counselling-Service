@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/guardian/contacts.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergency Contacts — MindCare Guardian</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div><div class="logo-sub">Guardian Access</div></div>
+    </div>
+    <div class="nav-user">
+      <a href="booking.html" class="btn btn-ghost btn-sm">← Emergency Booking</a>
+        <a href="status.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-check-circle-fill"></i></span> Student Status</a>
+      <button class="btn btn-danger btn-sm" onclick="window.location.href='../public/index.html'">End Session</button>
+    </div>
+  </nav>
+
+  <div style="max-width:760px; margin:2.5rem auto; padding:0 1.5rem;">
+    <div class="page-header">
+      <h1>Emergency Contacts <i class="bi bi-telephone-fill"></i></h1>
+      <p>Important campus and national phone numbers</p>
+    </div>
+
+    <div class="contact-card cc-mint">
+      <div class="contact-icon"><i class="bi bi-shield-fill"></i></div>
+      <div style="flex:1;">
+        <h3>Campus Security</h3>
+        <p>24/7 on-campus emergency response</p>
+        <a href="tel:011YYYYYYY" class="call-btn call-btn-mint"><i class="bi bi-telephone-fill"></i> 011-YYYY</a>
+      </div>
+    </div>
+
+    <div class="contact-card cc-orange">
+      <div class="contact-icon"><i class="bi bi-heart-pulse-fill"></i></div>
+      <div style="flex:1;">
+        <h3>Campus Health Center</h3>
+        <p>Monday – Saturday, 8:00 AM – 6:00 PM</p>
+        <a href="tel:011ZZZZZZZ" class="call-btn call-btn-orange"><i class="bi bi-telephone-fill"></i> 011-ZZZZ</a>
+      </div>
+    </div>
+
+    <div class="contact-card cc-red">
+      <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
+      <div style="flex:1;">
+        <h3>National Crisis Helpline — Sumithrayo</h3>
+        <p>24/7 · English &amp; Sinhala · Confidential</p>
+        <a href="tel:0112692909" class="call-btn call-btn-red"><i class="bi bi-telephone-fill"></i> 011-2692909</a>
+      </div>
+    </div>
+
+    <div class="contact-card cc-red">
+      <div class="contact-icon"><i class="bi bi-chat-dots-fill"></i></div>
+      <div style="flex:1;">
+        <h3>CCCline — Mental Health Helpline</h3>
+        <p>24/7 · All languages · Free call</p>
+        <a href="tel:1333" class="call-btn call-btn-red"><i class="bi bi-telephone-fill"></i> 1333</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

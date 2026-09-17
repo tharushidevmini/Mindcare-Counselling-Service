@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/guardian/diary.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shared Diary — MindCare Guardian</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div><div class="logo-sub">Guardian Access</div></div>
+    </div>
+    <div class="nav-user">
+      <span class="badge badge-orange"><i class="bi bi-shield-check"></i> Emergency Access — Limited View</span>
+      <button class="btn btn-danger btn-sm" onclick="endSession()">End Session</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Guardian Access</div>
+        <a href="booking.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-exclamation-octagon-fill"></i></span> Emergency Booking</a>
+        <a href="status.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-check-circle-fill"></i></span> Student Status</a>
+        <a href="diary.html" class="sidebar-link active"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> Shared Diary</a>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+        <a href="contacts.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-telephone-fill"></i></span> Emergency Contacts</a>
+      </div>
+      <div style="margin:1rem; padding:1rem; background:var(--mint-pale); border-radius:var(--radius-sm); border:1px solid rgba(92,196,138,0.25);">
+        <p style="font-size:11px; color:#1A7A48; font-weight:600; margin-bottom:4px;"><i class="bi bi-lock-fill"></i> Privacy Protected</p>
+        <p style="font-size:11px; color:#1A7A48; line-height:1.6;">You only see entries your student has personally chosen to share with you. Everything else in their diary stays private, always.</p>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Shared Diary <i class="bi bi-journal-bookmark"></i></h1>
+        <p>Entries your student has chosen to share with you</p>
+      </div>
+
+      <div id="shared-diary-list" class="card">
+        <p style="color:var(--text-3);">Loading...</p>
+      </div>
+
+      <div class="card-beige" style="margin-top:1.25rem;">
+        <p style="font-size:13.5px; color:var(--text-2); line-height:1.72;">
+          <strong style="color:var(--text);">How does this work?</strong><br>
+          Your student decides, entry by entry, whether to share it with you. Nothing appears here automatically — if the list below is empty, it means they haven't chosen to share anything yet, not that something is wrong.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/auth.js"></script>
+  <script>
+    const GAPI = window.location.origin + '/mindcare_final/backend';
+
+    async function loadSharedDiary() {
+      const box = document.getElementById('shared-diary-list');
+      try {
+        const res  = await fetch(`${GAPI}/api/guardian/diary_shared.php`);
+        const data = await res.json();
+        if (data.error) { box.innerHTML = `<p style="color:red;">${data.error}</p>`; return; }
+
+        const entries = data.entries || [];
+        if (entries.length === 0) {
+          box.innerHTML = `
+            <div style="text-align:center;padding:2rem 1rem;">
+              <div style="font-size:2rem;margin-bottom:.5rem;"><i class="bi bi-journal-x"></i></div>
+              <p style="color:var(--text-3);font-size:13.5px;">No shared entries yet.</p>
+            </div>`;
+          return;
+        }
+
+        box.innerHTML = entries.map(e => `
+          <div style="margin-bottom:.7rem;padding:.85rem 1rem;background:var(--beige-light);border-radius:12px;cursor:pointer;"
+            onclick="viewSharedEntry(${e.id})">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-weight:600;font-size:14px;">${e.mood_emoji || ''} ${e.title || 'Untitled'}</span>
+              <span style="font-size:11px;color:#999;">${e.entry_date}</span>
+            </div>
+          </div>`).join('');
+      } catch (e) {
+        box.innerHTML = '<p style="color:red;">Could not load shared entries. Is XAMPP running?</p>';
+      }
+    }
+
+    async function viewSharedEntry(id) {
+      openDiaryModal('<div style="padding:1rem 0;color:var(--text-3);">Loading entry…</div>');
+      try {
+        const res  = await fetch(`${GAPI}/api/guardian/diary_view.php?id=${id}`);
+        const data = await res.json();
+        if (data.error) {
+          openDiaryModal(`<p style="color:red;">${data.error}</p>`);
+          return;
+        }
+        openDiaryModal(`
+          <div style="font-size:11px;color:var(--text-3);margin-bottom:.5rem;">${data.entry_date}</div>
+          <h3 style="margin-bottom:.75rem;font-size:1.2rem;">${data.mood_emoji || ''} ${data.title || 'Untitled'}</h3>
+          <div style="padding:1rem;background:var(--beige-light);border-radius:12px;font-size:14px;color:#555;line-height:1.8;white-space:pre-wrap;">${data.content}</div>
+        `);
+      } catch (e) {
+        openDiaryModal('<p style="color:red;">Network error — could not load entry.</p>');
+      }
+    }
+
+    function openDiaryModal(content) {
+      let modal = document.getElementById('diary-view-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'diary-view-modal';
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:1000;display:flex;align-items:center;justify-content:center;';
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        document.body.appendChild(modal);
+      }
+      modal.innerHTML = `
+        <div style="background:white;border-radius:18px;padding:2rem;max-width:460px;width:90%;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 12px 48px rgba(0,0,0,0.18);">
+          <button onclick="document.getElementById('diary-view-modal').remove()"
+            style="position:absolute;top:1rem;right:1rem;width:28px;height:28px;border-radius:50%;background:#f0f0f0;border:none;cursor:pointer;font-size:14px;">X</button>
+          ${content}
+          <button onclick="document.getElementById('diary-view-modal').remove()"
+            style="width:100%;margin-top:1.25rem;background:var(--color-orange);border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;color:white;">
+            Close
+          </button>
+        </div>`;
+      modal.style.display = 'flex';
+    }
+
+    document.addEventListener('DOMContentLoaded', loadSharedDiary);
+
+    async function endSession() {
+      await fetch(window.location.origin + '/mindcare_final/backend/auth/logout.php');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

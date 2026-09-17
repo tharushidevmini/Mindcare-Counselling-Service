@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/guardian/status.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Status — MindCare Guardian</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div><div class="logo-sub">Guardian Access</div></div>
+    </div>
+    <div class="nav-user">
+      <span class="badge badge-orange"><i class="bi bi-shield-check"></i> Emergency Access — Limited View</span>
+      <button class="btn btn-danger btn-sm" onclick="endSession()">End Session</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Guardian Access</div>
+        <a href="booking.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-exclamation-octagon-fill"></i></span> Emergency Booking</a>
+        <a href="status.html" class="sidebar-link active"><span class="link-icon"><i class="bi bi-check-circle-fill"></i></span> Student Status</a>
+        <a href="diary.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> Shared Diary</a>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+        <a href="contacts.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-telephone-fill"></i></span> Emergency Contacts</a>
+      </div>
+      <div style="margin:1rem; padding:1rem; background:var(--mint-pale); border-radius:var(--radius-sm); border:1px solid rgba(92,196,138,0.25);">
+        <p style="font-size:11px; color:#1A7A48; font-weight:600; margin-bottom:4px;"><i class="bi bi-lock-fill"></i> Privacy Protected</p>
+        <p style="font-size:11px; color:#1A7A48; line-height:1.6;">You only see a general status — never diary entries, session notes, or exact assessment scores.</p>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Student Status <i class="bi bi-check-circle-fill"></i></h1>
+        <p>A quick, general check on how your student is doing</p>
+      </div>
+
+      <div id="status-card" class="card" style="text-align:center; padding:2.5rem 1.5rem;">
+        <p style="color:var(--text-3);">Loading...</p>
+      </div>
+
+      <div class="card-beige" style="margin-top:1.25rem;">
+        <p style="font-size:13.5px; color:var(--text-2); line-height:1.72;">
+          <strong style="color:var(--text);">Why can't I see more?</strong><br>
+          To protect your student's privacy and encourage them to speak openly, MindCare never shares exact assessment scores or private session notes with guardians, and diary entries stay private unless your student personally chooses to share a specific entry with you (see "Shared Diary" in the sidebar). This status view only reflects general engagement — if you're ever concerned, please reach out to the student directly or use Emergency Booking.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/auth.js"></script>
+  <script>
+    async function loadStatus() {
+      const box = document.getElementById('status-card');
+      try {
+        const res  = await fetch(window.location.origin + '/mindcare_final/backend/api/guardian/student_status.php');
+        const data = await res.json();
+        if (data.error) { box.innerHTML = `<p style="color:red;">${data.error}</p>`; return; }
+
+        if (data.shared_off) {
+          box.style.background = 'var(--beige-light)';
+          box.style.border = '2px solid var(--border)';
+          box.innerHTML = `
+            <div style="font-size:2.5rem; margin-bottom:.5rem;"><i class="bi bi-lock-fill"></i></div>
+            <h2 style="margin:0 0 .35rem; font-size:1.3rem;">${data.student.full_name}</h2>
+            <p style="font-size:13.5px; color:var(--text-2); max-width:420px; margin:.5rem auto 0;">
+              This student has chosen to keep their status private. If you're concerned, please reach out to them directly or use Emergency Booking.
+            </p>`;
+          return;
+        }
+
+        const colorMap = {
+          'Doing well 🟢':   { bg: '#EAF9F0', border: '#5CC48A' },
+          'Doing okay 🟢':   { bg: '#EAF9F0', border: '#5CC48A' },
+          'Managing 🟡':     { bg: '#FEF3DF', border: '#F0C242' },
+          'Needs support 🟠':{ bg: '#FEEBDA', border: '#F5A846' },
+          'Needs support 🔴':{ bg: '#FDECEC', border: '#DC4C4C' },
+          'No recent check-in': { bg: 'var(--beige-light)', border: 'var(--border)' },
+        };
+        const c = colorMap[data.status_label] || colorMap['No recent check-in'];
+
+        box.style.background = c.bg;
+        box.style.border = `2px solid ${c.border}`;
+        box.innerHTML = `
+          <div style="font-size:2.5rem; margin-bottom:.5rem;">${data.mood_emoji || '💚'}</div>
+          <h2 style="margin:0 0 .35rem; font-size:1.4rem;">${data.student.full_name}</h2>
+          <div style="font-size:1.15rem; font-weight:700; margin:.5rem 0;">${data.status_label}</div>
+          <p style="font-size:13.5px; color:var(--text-2); max-width:420px; margin:0 auto .5rem;">${data.status_note}</p>
+          <div style="display:flex; justify-content:center; gap:2rem; margin-top:1.5rem; font-size:12.5px; color:var(--text-3);">
+            <div>Last check-in<br><strong style="color:var(--text);">${data.last_checkin_date || '—'}</strong></div>
+            <div>Last counseling session<br><strong style="color:var(--text);">${data.last_session_date || '—'}</strong></div>
+          </div>`;
+      } catch (e) {
+        box.innerHTML = '<p style="color:red;">Could not load status. Is XAMPP running?</p>';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', loadStatus);
+
+    async function endSession() {
+      await fetch(window.location.origin + '/mindcare_final/backend/auth/logout.php');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>

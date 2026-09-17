@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/guardian/booking.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergency Booking — MindCare</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div><div class="logo-sub">Guardian Access</div></div>
+    </div>
+    <div class="nav-user">
+      <span class="badge badge-orange"><i class="bi bi-shield-fill"></i> Emergency Access — Limited View</span>
+      <button class="btn btn-danger btn-sm" onclick="endSession()">End Session</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Guardian Access</div>
+        <a href="booking.html" class="sidebar-link active"><span class="link-icon"><i class="bi bi-exclamation-octagon-fill"></i></span> Emergency Booking</a>
+        <a href="status.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-check-circle-fill"></i></span> Student Status</a>
+        <a href="diary.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> Shared Diary</a>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+        <a href="contacts.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-telephone-fill"></i></span> Emergency Contacts</a>
+      </div>
+      <div style="margin:1rem; padding:1rem; background:var(--mint-pale); border-radius:var(--radius-sm); border:1px solid rgba(92,196,138,0.25);">
+        <p style="font-size:11px; color:#1A7A48; font-weight:600; margin-bottom:4px;"><i class="bi bi-lock-fill"></i> Privacy Protected</p>
+        <span style="font-size:11.5px; color:var(--text-3); line-height:1.6;">You cannot view the student's diary, mood history, or clinical notes — only booking and general resources.</span>
+      </div>
+    </nav>
+
+    <main class="main">
+  <div style="max-width:680px; margin:0 auto;">
+
+    <div class="alert alert-warning">
+      <i class="bi bi-exclamation-triangle-fill"></i> Booking for <strong id="student-id-display">Loading student info…</strong>. You cannot see this student's diary or mood history. All activity is logged for security.
+    </div>
+
+    <div class="page-header">
+      <h1>Emergency Booking <i class="bi bi-exclamation-octagon-fill"></i></h1>
+      <p>Pick a counselor and one of their reserved emergency slots</p>
+    </div>
+
+    <div id="my-booking-banner" style="display:none; align-items:center; gap:.75rem; background:var(--mint-pale, #EAF9F0); border:1.5px solid var(--color-mint, #5CC48A); border-radius:var(--radius-sm); padding:.9rem 1.1rem; margin-bottom:1.25rem;">
+      <i class="bi bi-hourglass-split" style="font-size:1.3rem; color:#1A7A48;"></i>
+      <span id="my-booking-text" style="flex:1; font-size:13.5px; color:#1A7A48; font-weight:600;"></span>
+      <span id="my-booking-cancel-link" onclick="cancelJustBookedSession()" style="font-size:12px; color:#1A7A48; text-decoration:underline; cursor:pointer; white-space:nowrap; opacity:.85;">Cancel</span>
+    </div>
+
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="card-title">Step 1 — Select Counselor</div>
+      <div style="display:flex; flex-direction:column; gap:.6rem; margin-bottom:1.5rem;" id="counselor-list">
+        <p style="color:#aaa; font-size:13px;">Loading counselors…</p>
+      </div>
+
+      <div class="card-title" style="display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap;">
+        <span>Step 2 — Select Emergency Slot <span style="font-size:11px; color:var(--text-3); text-transform:none; font-weight:400;">(this counselor's reserved times)</span></span>
+        <input type="date" id="emergency-date" class="form-input" style="width:auto; padding:6px 10px; font-size:12.5px;" onchange="loadEmergencySlots(selectedCounselorId)">
+      </div>
+      <div style="display:flex; flex-direction:column; gap:.65rem; margin-bottom:1.5rem;" id="emergency-slots">
+        <p style="color:#aaa; font-size:13px;">Select a counselor above to see their reserved emergency slots…</p>
+      </div>
+
+      <div class="form-group" style="margin-bottom:1.25rem;">
+        <label class="form-label">Session Type</label>
+        <div style="display:flex; gap:.6rem;">
+          <div class="counselor-item selected" id="mode-physical" onclick="selectEmergencyMode('physical', this)" style="flex:1; text-align:center; cursor:pointer;">
+            <i class="bi bi-building"></i> Physical
+          </div>
+          <div class="counselor-item" id="mode-online" onclick="selectEmergencyMode('online', this)" style="flex:1; text-align:center; cursor:pointer;">
+            <i class="bi bi-laptop"></i> Online
+          </div>
+        </div>
+        <input type="hidden" id="emergency-mode" value="physical">
+      </div>
+
+      <div class="form-group" style="margin-bottom:1.25rem;">
+        <label class="form-label">Brief reason for emergency booking</label>
+        <textarea class="form-input" id="emergency-reason" rows="3" placeholder="Describe the situation briefly (helps the counselor prepare)..."></textarea>
+      </div>
+
+      <button class="btn btn-primary btn-full" onclick="confirmEmergencyBooking()">Confirm Emergency Session →</button>
+    </div>
+
+    <div class="card-beige">
+      <p style="font-size:13px; color:var(--text-2); line-height:1.7;">
+        <strong>After booking:</strong> The counselor will be notified immediately. If this is a life-threatening emergency, also call <strong>119</strong> or <strong>Sumithrayo: 011-2692909</strong>.
+      </p>
+    </div>
+  </div>
+    </main>
+  </div>
+
+  <!-- ── Success Modal ── -->
+  <div id="success-modal" style="display:none; position:fixed; inset:0; background:rgba(28,20,16,0.55); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:24px; padding:2.5rem; max-width:400px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25); animation:popIn .3s ease;">
+      <div style="width:72px; height:72px; margin:0 auto 1.25rem; border-radius:50%; background:linear-gradient(135deg, var(--color-mint), #5CC48A); display:flex; align-items:center; justify-content:center; font-size:2.2rem;"><i class="bi bi-check-lg" style="color:#fff;"></i></div>
+      <h2 style="font-family:var(--serif); font-size:1.4rem; margin-bottom:.6rem; color:var(--text);">Booking Sent — Awaiting Approval</h2>
+      <p id="success-modal-details" style="font-size:14px; color:var(--text-2); line-height:1.7; margin-bottom:1rem;">The counselor has been notified immediately. This page will update the moment they approve this session.</p>
+      <button class="btn btn-primary btn-full" onclick="closeSuccessModal()">Continue →</button>
+      <p id="cancel-booking-link" style="font-size:12.5px; color:var(--text-3); margin-top:1rem; cursor:pointer; text-decoration:underline;" onclick="cancelJustBookedSession()">Made a mistake? Cancel this booking</p>
+    </div>
+  </div>
+
+  <!-- ── Email Sent Modal ── -->
+  <div id="email-sent-modal" style="display:none; position:fixed; inset:0; background:rgba(28,20,16,0.55); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:24px; padding:2.5rem; max-width:400px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25); animation:popIn .3s ease;">
+      <div style="width:72px; height:72px; margin:0 auto 1.25rem; border-radius:50%; background:linear-gradient(135deg, var(--color-orange), #F5C846); display:flex; align-items:center; justify-content:center; font-size:2.2rem;"><i class="bi bi-envelope-check-fill" style="color:#fff;"></i></div>
+      <h2 style="font-family:var(--serif); font-size:1.4rem; margin-bottom:.6rem; color:var(--text);">Email Sent</h2>
+      <p id="email-sent-text" style="font-size:14px; color:var(--text-2); line-height:1.7; margin-bottom:1.75rem;">The counselor has been emailed directly and will reach out as soon as possible.</p>
+      <button class="btn btn-primary btn-full" onclick="closeEmailSentModal()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ── Booking Cancelled Modal ── -->
+  <div id="cancel-confirmed-modal" style="display:none; position:fixed; inset:0; background:rgba(28,20,16,0.55); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:24px; padding:2.5rem; max-width:400px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25); animation:popIn .3s ease;">
+      <div style="width:72px; height:72px; margin:0 auto 1.25rem; border-radius:50%; background:linear-gradient(135deg, #8C7060, #A8907F); display:flex; align-items:center; justify-content:center; font-size:2.2rem;"><i class="bi bi-x-circle-fill" style="color:#fff;"></i></div>
+      <h2 style="font-family:var(--serif); font-size:1.4rem; margin-bottom:.6rem; color:var(--text);">Booking Cancelled</h2>
+      <p style="font-size:14px; color:var(--text-2); line-height:1.7; margin-bottom:1.75rem;">This emergency session has been cancelled, and the counselor has been notified.</p>
+      <button class="btn btn-primary btn-full" onclick="closeCancelConfirmedModal()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- ── Generic Error Modal (used for booking, email, validation errors) ── -->
+  <div id="app-error-modal" style="display:none; position:fixed; inset:0; background:rgba(28,20,16,0.55); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:24px; padding:2.5rem; max-width:400px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25); animation:popIn .3s ease;">
+      <div style="width:72px; height:72px; margin:0 auto 1.25rem; border-radius:50%; background:linear-gradient(135deg, var(--red), #E05A3A); display:flex; align-items:center; justify-content:center; font-size:2.2rem;"><i class="bi bi-exclamation-triangle-fill" style="color:#fff;"></i></div>
+      <h2 id="app-error-title" style="font-family:var(--serif); font-size:1.4rem; margin-bottom:.6rem; color:var(--text);">Something Went Wrong</h2>
+      <p id="app-error-text" style="font-size:14px; color:var(--text-2); line-height:1.7; margin-bottom:1.75rem;">Please try again.</p>
+      <button class="btn btn-primary btn-full" onclick="closeAppErrorModal()">Close</button>
+    </div>
+  </div>
+
+  <!-- ── Session Expired Modal ── -->
+  <div id="session-expired-modal" style="display:none; position:fixed; inset:0; background:rgba(28,20,16,0.55); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:24px; padding:2.5rem; max-width:400px; width:90%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.25); animation:popIn .3s ease;">
+      <div style="width:72px; height:72px; margin:0 auto 1.25rem; border-radius:50%; background:linear-gradient(135deg, var(--orange-dark), var(--color-orange)); display:flex; align-items:center; justify-content:center; font-size:2.2rem;"><i class="bi bi-clock-history" style="color:#fff;"></i></div>
+      <h2 style="font-family:var(--serif); font-size:1.4rem; margin-bottom:.6rem; color:var(--text);">Session Expired</h2>
+      <p style="font-size:14px; color:var(--text-2); line-height:1.7; margin-bottom:1.75rem;">For security, guardian sessions expire after a short time. Please verify again to continue.</p>
+      <button class="btn btn-primary btn-full" onclick="goToGuardianLogin()">Log In Again →</button>
+    </div>
+  </div>
+
+  <style>
+    @keyframes popIn { from { transform:scale(.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+  </style>
+
+  <script>
+    const API = window.location.origin + '/mindcare_final/backend/api/guardian';
+    let selectedBlockId = null, selectedCounselorId = null;
+
+    (function initEmergencyDate() {
+      const today = new Date().toISOString().slice(0, 10);
+      const dateInput = document.getElementById('emergency-date');
+      dateInput.value = today;
+      dateInput.min   = today; // guardians book emergency slots today or later, never past dates
+    })();
+
+    async function loadSessionInfo() {
+      try {
+        const res  = await fetch(`${API}/session_info.php`);
+        const data = await res.json();
+
+        if (data.error) {
+          document.getElementById('session-expired-modal').style.display = 'flex';
+          return;
+        }
+
+        const s = data.student;
+        document.getElementById('student-id-display').textContent =
+          s ? `${s.full_name} (${s.student_id || '—'})` : 'Unknown student';
+
+        const list = document.getElementById('counselor-list');
+        const counselors = data.counselors || [];
+        if (counselors.length === 0) {
+          list.innerHTML = '<p style="color:#aaa;font-size:13px;">No counselors available right now.</p>';
+          return;
+        }
+        list.innerHTML = counselors.map((c, i) => `
+          <div class="counselor-item ${i === 0 ? 'selected' : ''}" onclick="pickCounselor(${c.id}, this)">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--color-mint);display:flex;align-items:center;justify-content:center;font-weight:700;color:#1A5C38;">${c.full_name.charAt(0)}</div>
+            <div><h4>${c.full_name}</h4><p>Available for emergency slots</p></div>
+            <span class="badge badge-mint" style="margin-left:auto; ${i === 0 ? '' : 'display:none;'}">Selected</span>
+          </div>`).join('');
+        selectedCounselorId = counselors[0].id;
+        loadEmergencySlots(selectedCounselorId);
+
+      } catch (e) {
+        document.getElementById('counselor-list').innerHTML = '<p style="color:red;font-size:13px;">Could not load counselors.</p>';
+      }
+    }
+
+    function selectEmergencyMode(mode, el) {
+      document.getElementById('emergency-mode').value = mode;
+      document.getElementById('mode-physical').classList.toggle('selected', mode === 'physical');
+      document.getElementById('mode-online').classList.toggle('selected', mode === 'online');
+    }
+
+    function pickCounselor(id, el) {
+      selectedCounselorId = id;
+      document.querySelectorAll('#counselor-list .counselor-item').forEach(c => {
+        c.classList.remove('selected');
+        const b = c.querySelector('.badge'); if (b) b.style.display = 'none';
+      });
+      el.classList.add('selected');
+      const badge = el.querySelector('.badge'); if (badge) badge.style.display = 'inline-block';
+      loadEmergencySlots(id);
+    }
+
+    // Load THIS counselor's real reserved emergency slots for the selected date
+    async function loadEmergencySlots(counselorId) {
+      selectedBlockId = null;
+      const box = document.getElementById('emergency-slots');
+      const dateVal = document.getElementById('emergency-date').value;
+      box.innerHTML = '<p style="color:#aaa;font-size:13px;">Loading reserved slots…</p>';
+      try {
+        const res  = await fetch(`${API}/emergency_slots.php?counselor_id=${counselorId}&date=${dateVal}`);
+        const data = await res.json();
+        const slots = data.slots || [];
+        if (!slots.length) {
+          const isToday = dateVal === new Date().toISOString().slice(0, 10);
+          box.innerHTML = `
+            <div class="card-beige" style="padding:1rem;">
+              <p style="font-size:13px; color:var(--text-2); line-height:1.7; margin-bottom:.85rem;">
+                This counselor's emergency slots ${isToday ? 'are both already booked today' : 'are both already booked on this date'}. Try picking a different date above, or send them an urgent email instead — describe the situation in the reason box below, then click:
+              </p>
+              <button class="btn btn-primary btn-full" onclick="emailCounselor()"><i class="bi bi-envelope-fill"></i> Email this counselor directly</button>
+            </div>`;
+          return;
+        }
+        box.innerHTML = slots.map((s, i) => `
+          <div class="counselor-item ${i === 0 ? 'selected' : ''}" onclick="pickSlot(${s.id}, this)">
+            <span style="font-size:1.3rem;">🟢</span>
+            <div style="flex:1;"><h4>${escapeHtmlG(s.block_time)}</h4><p>${escapeHtmlG(s.reason || 'Reserved crisis slot')}</p></div>
+            <span class="badge ${i === 0 ? 'badge-mint' : 'badge-beige'}" style="${i === 0 ? '' : 'display:none;'}">Selected</span>
+          </div>`).join('');
+        selectedBlockId = slots[0].id;
+      } catch (e) {
+        box.innerHTML = '<p style="color:red;font-size:13px;">Could not load slots for this counselor.</p>';
+      }
+    }
+
+    function escapeHtmlG(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    function pickSlot(blockId, el) {
+      selectedBlockId = blockId;
+      document.getElementById('emergency-slots').querySelectorAll('.counselor-item').forEach(c => {
+        c.classList.remove('selected');
+        const badge = c.querySelector('.badge');
+        if (badge) { badge.className = 'badge badge-beige'; badge.style.display = 'none'; badge.textContent = 'Available'; }
+      });
+      el.classList.add('selected');
+      const badge = el.querySelector('.badge');
+      if (badge) { badge.className = 'badge badge-mint'; badge.style.display = 'inline-block'; badge.textContent = 'Selected'; }
+    }
+
+    let lastBookedAppointmentId = null;
+
+    async function confirmEmergencyBooking() {
+      const reason = document.getElementById('emergency-reason').value.trim();
+      if (!reason) { showAppError('Missing Information', 'Please briefly describe the reason for the emergency booking.'); return; }
+      if (!selectedCounselorId) { showAppError('Missing Information', 'Please select a counselor.'); return; }
+      if (!selectedBlockId) { showAppError('Missing Information', 'Please select an emergency slot.'); return; }
+      const fd = new FormData();
+      fd.append('block_id', selectedBlockId);
+      fd.append('counselor_id', selectedCounselorId);
+      fd.append('date', document.getElementById('emergency-date').value);
+      fd.append('mode', document.getElementById('emergency-mode').value);
+      fd.append('reason', reason);
+      try {
+        const res  = await fetch(`${API}/book.php`, { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) {
+          lastBookedAppointmentId = data.appointment_id || null;
+          const details = document.getElementById('success-modal-details');
+          if (data.date && data.time) {
+            details.textContent = `Requested for ${data.date} at ${data.time}. The counselor has been notified immediately — this page will update the moment they approve it.`;
+            const banner = document.getElementById('my-booking-banner');
+            document.getElementById('my-booking-text').textContent = `You requested ${data.date} at ${data.time} — awaiting counselor approval.`;
+            banner.style.display = 'flex';
+            startBookingStatusPolling();
+          }
+          document.getElementById('cancel-booking-link').style.display = lastBookedAppointmentId ? 'block' : 'none';
+          document.getElementById('success-modal').style.display = 'flex';
+        } else {
+          showAppError('Booking Failed', data.error || 'Could not confirm booking. Please try again.');
+        }
+      } catch {
+        showAppError('Network Error', 'Make sure XAMPP is running, then try again.');
+      }
+    }
+
+    let bookingStatusInterval = null;
+
+    // Polls this guardian's own booking every 10s while it's still pending —
+    // the moment the counselor approves, the banner updates live, right here
+    // in this same session. No email needed.
+    function startBookingStatusPolling() {
+      if (bookingStatusInterval) clearInterval(bookingStatusInterval);
+      bookingStatusInterval = setInterval(async () => {
+        if (!lastBookedAppointmentId) { clearInterval(bookingStatusInterval); return; }
+        try {
+          const res  = await fetch(`${API}/check_booking_status.php?appointment_id=${lastBookedAppointmentId}`);
+          const data = await res.json();
+          if (!data.success) return;
+
+          const banner = document.getElementById('my-booking-banner');
+          const text   = document.getElementById('my-booking-text');
+
+          if (data.status === 'accepted') {
+            banner.style.background = 'var(--mint-pale, #EAF9F0)';
+            banner.style.borderColor = 'var(--color-mint, #5CC48A)';
+            banner.querySelector('i').className = 'bi bi-check-circle-fill';
+            text.textContent = `Approved! Your session on ${data.date} at ${data.time} is confirmed.`;
+            clearInterval(bookingStatusInterval);
+          } else if (data.status === 'postponed') {
+            banner.style.background = 'var(--orange-pale, #FEF3DF)';
+            banner.style.borderColor = 'var(--color-orange, #F5A846)';
+            banner.querySelector('i').className = 'bi bi-clock-history';
+            text.textContent = (data.new_date && data.new_time)
+              ? `The counselor has proposed a new time: ${data.new_date} at ${data.new_time}. Thank you for your patience.`
+              : `The counselor needs a little more time — they'll follow up with a new time for you shortly. Thank you for your patience.`;
+            // keep polling — a postponed booking may still move to accepted later
+          } else if (data.status === 'cancelled') {
+            text.textContent = `This booking was cancelled.`;
+            lastBookedAppointmentId = null;
+            document.getElementById('cancel-booking-link').style.display = 'none';
+            document.getElementById('my-booking-cancel-link').style.display = 'none';
+            clearInterval(bookingStatusInterval);
+          }
+        } catch (e) { /* silent — try again on next interval */ }
+      }, 10000);
+    }
+
+    async function cancelJustBookedSession() {
+      if (!lastBookedAppointmentId) return;
+      if (!confirm('Cancel this emergency booking? The counselor will be notified.')) return;
+
+      const fd = new FormData();
+      fd.append('appointment_id', lastBookedAppointmentId);
+      fd.append('reason', 'Guardian cancelled shortly after booking');
+      try {
+        const res  = await fetch(`${API}/cancel_booking.php`, { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) {
+          closeSuccessModal();
+          lastBookedAppointmentId = null;
+          if (bookingStatusInterval) clearInterval(bookingStatusInterval);
+          document.getElementById('my-booking-banner').style.display = 'none';
+          document.getElementById('cancel-confirmed-modal').style.display = 'flex';
+          if (selectedCounselorId) loadEmergencySlots(selectedCounselorId); // slot may free back up
+        } else {
+          showAppError('Could Not Cancel', data.error || 'Please try again.');
+        }
+      } catch {
+        showAppError('Network Error', 'Make sure XAMPP is running, then try again.');
+      }
+    }
+
+    // Sent when a counselor has no free emergency slot — emails them directly
+    async function emailCounselor() {
+      const reason = document.getElementById('emergency-reason').value.trim();
+      if (!reason) { showAppError('Missing Information', 'Please briefly describe the emergency in the reason box first.'); return; }
+      if (!selectedCounselorId) { showAppError('Missing Information', 'Please select a counselor first.'); return; }
+
+      const btn = document.querySelector('button[onclick="emailCounselor()"]');
+      const originalHtml = btn ? btn.innerHTML : null;
+      if (btn) { btn.disabled = true; btn.innerHTML = 'Sending…'; }
+
+      const fd = new FormData();
+      fd.append('counselor_id', selectedCounselorId);
+      fd.append('reason', reason);
+      try {
+        const res  = await fetch(`${API}/email_counselor.php`, { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('email-sent-text').textContent = data.message || 'The counselor has been emailed directly and will reach out as soon as possible.';
+          document.getElementById('email-sent-modal').style.display = 'flex';
+        } else {
+          showAppError("Couldn't Send Email", data.error || 'Could not send email. Please try again.');
+        }
+      } catch {
+        showAppError('Network Error', 'Make sure XAMPP is running, then try again.');
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHtml; }
+      }
+    }
+
+    function closeEmailSentModal() {
+      document.getElementById('email-sent-modal').style.display = 'none';
+    }
+
+    // ── Shared modal helpers ──
+    function showAppError(title, text) {
+      document.getElementById('app-error-title').textContent = title;
+      document.getElementById('app-error-text').textContent  = text;
+      document.getElementById('app-error-modal').style.display = 'flex';
+    }
+    function closeAppErrorModal() {
+      document.getElementById('app-error-modal').style.display = 'none';
+    }
+    function goToGuardianLogin() {
+      window.location.href = 'login.html';
+    }
+
+    function closeSuccessModal() {
+      document.getElementById('success-modal').style.display = 'none';
+    }
+
+    function closeCancelConfirmedModal() {
+      document.getElementById('cancel-confirmed-modal').style.display = 'none';
+    }
+
+    function endSession() {
+      fetch(window.location.origin + '/mindcare_final/backend/auth/logout.php').then(() => window.location.href = window.location.origin + '/mindcare_final/frontend/pages/public/index.html');
+    }
+
+    loadSessionInfo();
+    restoreExistingBooking();
+
+    // If the guardian already booked something earlier in this same session
+    // (e.g. they navigated away and came back, or refreshed), show it again
+    // instead of leaving them to wonder if it went through.
+    async function restoreExistingBooking() {
+      try {
+        const res  = await fetch(`${API}/check_booking_status.php`);
+        const data = await res.json();
+        if (!data.success || !data.appointment_id) return;
+        if (data.status === 'cancelled') return; // nothing to restore
+
+        lastBookedAppointmentId = data.appointment_id;
+        const banner = document.getElementById('my-booking-banner');
+        const text   = document.getElementById('my-booking-text');
+        banner.style.display = 'flex';
+
+        if (data.status === 'accepted') {
+          banner.style.background = 'var(--mint-pale, #EAF9F0)';
+          banner.style.borderColor = 'var(--color-mint, #5CC48A)';
+          banner.querySelector('i').className = 'bi bi-check-circle-fill';
+          text.textContent = `Approved! Your session on ${data.date} at ${data.time} is confirmed.`;
+        } else if (data.status === 'postponed') {
+          banner.style.background = 'var(--orange-pale, #FEF3DF)';
+          banner.style.borderColor = 'var(--color-orange, #F5A846)';
+          banner.querySelector('i').className = 'bi bi-clock-history';
+          text.textContent = (data.new_date && data.new_time)
+            ? `The counselor has proposed a new time: ${data.new_date} at ${data.new_time}.`
+            : `The counselor needs a little more time — they'll follow up with a new time for you shortly.`;
+          startBookingStatusPolling();
+        } else {
+          text.textContent = `You requested ${data.date} at ${data.time} — awaiting counselor approval.`;
+          startBookingStatusPolling();
+        }
+      } catch (e) { /* nothing to restore, or not verified yet — ignore */ }
+    }
+  </script>
+</body>
+</html>
