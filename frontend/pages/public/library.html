@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/public/library.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mental Health Library — MindCare</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+</head>
+<body>
+
+  <nav class="pub-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="pub-nav-links">
+      <a href="index.html" class="pub-nav-link">← Home</a>
+      <a href="../login.html" class="btn btn-primary">Login</a>
+    </div>
+  </nav>
+
+  <div class="hotline-bar">
+    <strong><i class="bi bi-exclamation-octagon-fill"></i> Crisis Lines:</strong>
+    <a href="tel:0112692909" class="hotline-chip">Sumithrayo: 011-2692909</a>
+    <a href="tel:1333" class="hotline-chip">CCCline: 1333</a>
+  </div>
+
+  <div style="max-width:1100px; margin:0 auto; padding:3rem 1.5rem;">
+    <div class="page-header">
+      <h1>Mental Health Library <i class="bi bi-book-half"></i></h1>
+      <p>Evidence-based articles and videos — freely available to everyone, no login required</p>
+    </div>
+
+    <!-- Static evergreen guides (always available) -->
+    <h2 style="font-family:var(--serif);font-size:1.3rem;color:var(--text);margin-bottom:1rem;">Featured Guides</h2>
+    <div class="grid-3" id="featured-guides-grid" style="margin-bottom:3rem;">
+      <div class="resource-card" onclick="window.location.href='articles/exam-anxiety.html'" style="cursor:pointer;">
+        <img class="resource-card-img" src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=500&q=80" alt="Exam anxiety">
+        <div class="resource-card-body">
+          <h3>Managing Exam Anxiety</h3>
+          <p>Practical techniques to stay calm before and during exams, including breathing, preparation, and mindset shifts.</p>
+          <span class="badge badge-mint">Article</span>
+        </div>
+      </div>
+      <div class="resource-card" onclick="window.location.href='articles/sleep-health.html'" style="cursor:pointer;">
+        <img class="resource-card-img" src="https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=500&q=80" alt="Sleep">
+        <div class="resource-card-body">
+          <h3>Sleep &amp; Mental Health</h3>
+          <p>How poor sleep affects mood, concentration, and emotional regulation — and how to build better habits.</p>
+          <span class="badge badge-orange">Article</span>
+        </div>
+      </div>
+      <div class="resource-card" onclick="window.location.href='articles/talk-to-someone.html'" style="cursor:pointer;">
+        <img class="resource-card-img" src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=500&q=80" alt="Counselor">
+        <div class="resource-card-body">
+          <h3>When to Talk to Someone</h3>
+          <p>Signs that you may benefit from speaking with a professional counselor, and how to take the first step.</p>
+          <span class="badge badge-beige">Guide</span>
+        </div>
+      </div>
+      <div class="resource-card" onclick="window.location.href='articles/mindfulness.html'" style="cursor:pointer;">
+        <img class="resource-card-img" src="https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=500&q=80" alt="Mindfulness">
+        <div class="resource-card-body">
+          <h3>Mindfulness for Students</h3>
+          <p>Simple mindfulness exercises that take under 5 minutes and can be done anywhere on campus.</p>
+          <span class="badge badge-mint">Article</span>
+        </div>
+      </div>
+      <div class="resource-card" onclick="window.location.href='articles/peer-pressure.html'" style="cursor:pointer;">
+        <img class="resource-card-img" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=500&q=80" alt="Peer pressure">
+        <div class="resource-card-body">
+          <h3>Peer Pressure &amp; Belonging</h3>
+          <p>Understanding social pressure in university life and healthy ways to navigate it.</p>
+          <span class="badge badge-orange">Guide</span>
+        </div>
+      </div>
+      <div class="resource-card" onclick="window.location.href='articles/resilience.html'" style="cursor:pointer;">
+        <img class="resource-card-img" src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&q=80" alt="Resilience">
+        <div class="resource-card-body">
+          <h3>Building Resilience</h3>
+          <p>How to bounce back from academic setbacks and build the emotional strength to keep going.</p>
+          <span class="badge badge-beige">Article</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Counselor-published videos (loaded dynamically) — a dedicated gallery, separate from the articles above -->
+    <h2 id="video-heading" style="font-family:var(--serif);font-size:1.3rem;color:var(--text);margin-bottom:1rem;display:none;"><i class="bi bi-play-circle-fill" style="color:var(--color-orange);"></i> Motivational Videos</h2>
+    <div class="grid-3" id="dynamic-videos"></div>
+  </div>
+
+  <script>
+    // Load counselor-published resources. Uses public_list.php which returns
+    // only is_published=1 rows — no login needed, this page is public.
+    const LIB_API = window.location.origin + '/mindcare_final/backend/api/resources/public_list.php';
+
+    function ytId(url) {
+      const m = String(url || '').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{11})/);
+      return m ? m[1] : '';
+    }
+    function libEsc(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // A polished, on-brand placeholder cover for anything without a real
+    // image — a soft gradient plus a large icon, so a missing image never
+    // looks like a blank/broken box.
+    function fallbackCover(icon, gradientFrom, gradientTo) {
+      return `<div class="resource-card-img" style="display:flex;align-items:center;justify-content:center;font-size:2.75rem;color:#fff;background:linear-gradient(135deg, ${gradientFrom}, ${gradientTo});">
+        <i class="bi ${icon}"></i>
+      </div>`;
+    }
+
+    async function loadCounselorResources() {
+      const featuredGrid = document.getElementById('featured-guides-grid');
+      const videoBox = document.getElementById('dynamic-videos');
+      const videoHeading = document.getElementById('video-heading');
+      try {
+        const res  = await fetch(LIB_API);
+        // Not logged in → list.php redirects; this page is public, so just skip silently.
+        if (!res.ok) return;
+        const data = await res.json();
+        const items = data.resources || [];
+        if (!items.length) return;
+
+        window._libResources = items;
+
+        const articles = items.filter(r => r.resource_type !== 'video');
+        const videos   = items.filter(r => r.resource_type === 'video');
+
+        // Articles just join the same grid as the static featured guides —
+        // no separate heading, they blend in as more of the same thing.
+        articles.forEach(r => {
+          const badge = r.resource_type === 'audio'
+            ? '<span class="badge badge-mint">Audio</span>'
+            : '<span class="badge badge-mint">Article</span>';
+
+          const cover = r.file_path
+            ? `<img class="resource-card-img" src="${libEsc(r.file_path)}" alt="">`
+            : fallbackCover('bi-file-earmark-text-fill', 'var(--color-orange)', 'var(--color-mint)');
+
+          const card = document.createElement('div');
+          card.className = 'resource-card';
+          card.style.cursor = 'pointer';
+          // If the counselor gave a real source link, go straight there in
+          // THIS tab (not a new one) — so the browser's Back button returns
+          // to the library, exactly like any other outbound link would.
+          card.onclick = r.external_url
+            ? () => { window.location.href = r.external_url; }
+            : () => openResourceModal(r.id);
+          card.innerHTML = `${cover}
+            <div class="resource-card-body">
+              <h3>${libEsc(r.title)}${r.external_url ? ' <i class="bi bi-box-arrow-up-right" style="font-size:.75em;color:var(--text-3);" title="Opens the original article"></i>' : ''}</h3>
+              <p>${libEsc((r.description || '').slice(0, 120))}${(r.description||'').length > 120 ? '…' : ''}</p>
+              ${badge}
+            </div>`;
+          featuredGrid.appendChild(card);
+        });
+
+        if (videos.length) {
+          videoHeading.style.display = 'block';
+          videoBox.innerHTML = videos.map(r => {
+            const id = ytId(r.file_path);
+            const cover = id
+              ? `<div style="position:relative;">
+                   <img class="resource-card-img" src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="">
+                   <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(28,20,16,.15);">
+                     <div style="width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.25);">
+                       <i class="bi bi-play-fill" style="font-size:1.6rem;color:var(--color-orange);margin-left:3px;"></i>
+                     </div>
+                   </div>
+                 </div>`
+              : fallbackCover('bi-camera-reels-fill', 'var(--color-orange)', '#F5C846');
+
+            const target = r.file_path
+              ? `window.open('${libEsc(r.file_path)}','_blank')`
+              : `openResourceModal(${r.id})`;
+
+            return `<div class="resource-card" onclick="${target}" style="cursor:pointer;">
+              ${cover}
+              <div class="resource-card-body">
+                <h3>${libEsc(r.title)}</h3>
+                <p>${libEsc((r.description || '').slice(0, 120))}${(r.description||'').length > 120 ? '…' : ''}</p>
+                <span class="badge badge-orange">Video</span>
+              </div>
+            </div>`;
+          }).join('');
+        }
+      } catch (err) {
+        // Public page: fail quietly, featured guides still show.
+        console.warn('Counselor resources not loaded:', err);
+      }
+    }
+
+    function openResourceModal(id) {
+      const r = (window._libResources || []).find(x => x.id == id);
+      if (!r) return;
+      document.getElementById('res-modal-title').textContent = r.title;
+      document.getElementById('res-modal-body').innerHTML =
+        (r.file_path && r.resource_type === 'article'
+          ? `<img src="${libEsc(r.file_path)}" style="width:100%;border-radius:var(--radius-sm);margin-bottom:1rem;" alt="">` : '')
+        + `<p style="white-space:pre-wrap;line-height:1.75;color:var(--text-2);">${libEsc(r.description || 'No content provided.')}</p>`;
+      document.getElementById('res-modal').style.display = 'flex';
+    }
+    function closeResourceModal() {
+      document.getElementById('res-modal').style.display = 'none';
+    }
+
+    loadCounselorResources();
+  </script>
+
+  <!-- Article reader modal -->
+  <div id="res-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1rem;">
+        <h3 id="res-modal-title" style="margin:0;"></h3>
+        <button class="btn btn-ghost btn-sm" onclick="closeResourceModal()" style="flex-shrink:0;"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div id="res-modal-body"></div>
+    </div>
+  </div>
+
+  <script src="../../js/main.js"></script>
+</body>
+</html>
