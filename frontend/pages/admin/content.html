@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Content Manager — MindCare</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/admin.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <span class="badge badge-red">System Admin</span>
+      <div class="avatar" style="background:var(--red);" id="user-avatar">A</div>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Admin Controls</div>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+        <a href="dashboard.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-people-fill"></i></span> User Management</a>
+        <a href="content.html"   class="sidebar-link active"><span class="link-icon"><i class="bi bi-music-note-beamed"></i></span> Content Manager</a>
+        <a href="security.html"  class="sidebar-link"><span class="link-icon"><i class="bi bi-shield-check"></i></span> Security &amp; Backups</a>
+        <a href="logs.html"      class="sidebar-link"><span class="link-icon"><i class="bi bi-clipboard-check"></i></span> Activity Logs</a>
+        <a href="guide.html"     class="sidebar-link"><span class="link-icon"><i class="bi bi-book-half"></i></span> System Guide</a>
+        <a href="notes.html"     class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Notes</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Content Manager <i class="bi bi-music-note-beamed"></i></h1>
+        <p>Manage breathing exercises, music tracks, and meditation types</p>
+      </div>
+
+      <!-- Tabs -->
+      <div style="display:flex; gap:.5rem; margin-bottom:1.5rem; border-bottom:2px solid #eee; padding-bottom:.5rem;">
+        <button class="btn btn-primary btn-sm" onclick="showTab('breathing',this)" id="tab-breathing"><i class="bi bi-wind"></i> Breathing</button>
+        <button class="btn btn-ghost btn-sm"   onclick="showTab('music',this)"     id="tab-music"><i class="bi bi-music-note-beamed"></i> Music</button>
+        <button class="btn btn-ghost btn-sm"   onclick="showTab('meditation',this)" id="tab-meditation"><i class="bi bi-person-workspace"></i> Meditation</button>
+      </div>
+
+      <!-- Breathing Tab -->
+      <div id="tab-content-breathing">
+        <div class="card" style="margin-bottom:1rem;">
+          <div class="card-title">Breathing Exercises</div>
+          <div id="breathing-list"><p class="text-muted">Loading...</p></div>
+        </div>
+      </div>
+
+      <!-- Music Tab -->
+      <div id="tab-content-music" style="display:none;">
+        <div class="card" style="margin-bottom:1rem;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <div class="card-title" style="margin:0;">Music Tracks</div>
+            <button class="btn btn-primary btn-sm" onclick="showAddMusic()">+ Add Track</button>
+          </div>
+          <div id="music-list"><p class="text-muted">Loading...</p></div>
+        </div>
+
+        <!-- Add Music Form -->
+        <div class="card" id="add-music-form" style="display:none;">
+          <div class="card-title">Add New Track</div>
+          <div class="form-group">
+            <label class="form-label">Title</label>
+            <input class="form-input" id="m-title" placeholder="e.g. Ocean Waves">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Category</label>
+            <select class="form-input form-select" id="m-category">
+              <option value="calm">Calm</option>
+              <option value="sleep">Sleep</option>
+              <option value="energy">Energy</option>
+              <option value="water">Water Therapy</option>
+              <option value="bowl">Singing Bowls</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Audio URL</label>
+            <input class="form-input" id="m-audio" placeholder="https://...mp3">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cover Image URL (optional)</label>
+            <input class="form-input" id="m-cover" placeholder="https://...jpg">
+          </div>
+          <div style="display:flex; gap:.75rem;">
+            <button class="btn btn-primary" onclick="addMusic()">Add Track</button>
+            <button class="btn btn-ghost" onclick="document.getElementById('add-music-form').style.display='none'">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Meditation Tab -->
+      <div id="tab-content-meditation" style="display:none;">
+        <div class="card">
+          <div class="card-title">Meditation Types</div>
+          <div id="meditation-list"><p class="text-muted">Loading...</p></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/auth.js?v=5"></script>
+  <script src="../../js/main.js"></script>
+  <script>
+    const API = window.location.origin + '/mindcare_final/backend';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadBreathing();
+    });
+
+    function showTab(tab, btn) {
+      ['breathing','music','meditation'].forEach(t => {
+        document.getElementById('tab-content-' + t).style.display = t === tab ? 'block' : 'none';
+        document.getElementById('tab-' + t).className = t === tab ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm';
+      });
+      if (tab === 'breathing')  loadBreathing();
+      if (tab === 'music')      loadMusic();
+      if (tab === 'meditation') loadMeditation();
+    }
+
+    async function loadBreathing() {
+      try {
+        const res  = await fetch(`${API}/api/relaxation/manage.php?action=list&table=relaxation_exercises`);
+        const data = await res.json();
+        const list = document.getElementById('breathing-list');
+        if (!data.data || data.data.length === 0) {
+          list.innerHTML = '<p class="text-muted">No exercises found.</p>'; return;
+        }
+        list.innerHTML = `
+          <table style="width:100%; border-collapse:collapse;">
+            <thead><tr style="background:var(--color-beige);">
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Icon</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Name</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Description</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Status</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Action</th>
+            </tr></thead>
+            <tbody>
+              ${data.data.map(e => `
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="padding:.6rem; font-size:1.3rem;">${e.icon || '<i class="bi bi-wind"></i>'}</td>
+                  <td style="padding:.6rem; font-weight:600; font-size:14px;">${e.name}</td>
+                  <td style="padding:.6rem; font-size:12px; color:#888; max-width:300px;">${e.description || '—'}</td>
+                  <td style="padding:.6rem;">
+                    <span style="font-size:11px; padding:2px 8px; border-radius:20px; background:${e.is_active==1?'var(--color-mint)':'#f0f0f0'}; color:${e.is_active==1?'#1A7A48':'#888'};">
+                      ${e.is_active==1 ? 'Active' : 'Hidden'}
+                    </span>
+                  </td>
+                  <td style="padding:.6rem;">
+                    <button class="btn btn-sm ${e.is_active==1?'btn-ghost':'btn-mint'}"
+                      onclick="toggleItem('relaxation_exercises', ${e.id}, ${e.is_active}, loadBreathing)">
+                      ${e.is_active==1 ? '<i class="bi bi-slash-circle"></i> Hide' : '<i class="bi bi-check-circle-fill"></i> Show'}
+                    </button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadMusic() {
+      try {
+        const res  = await fetch(`${API}/api/relaxation/manage.php?action=list&table=music_tracks`);
+        const data = await res.json();
+        const list = document.getElementById('music-list');
+        if (!data.data || data.data.length === 0) {
+          list.innerHTML = '<p class="text-muted">No tracks found.</p>'; return;
+        }
+        list.innerHTML = `
+          <table style="width:100%; border-collapse:collapse;">
+            <thead><tr style="background:var(--color-beige);">
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Title</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Category</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Status</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Action</th>
+            </tr></thead>
+            <tbody>
+              ${data.data.map(t => `
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="padding:.6rem; font-weight:600; font-size:14px;"><i class="bi bi-music-note-beamed"></i> ${t.title}</td>
+                  <td style="padding:.6rem; font-size:12px; color:#888; text-transform:capitalize;">${t.category}</td>
+                  <td style="padding:.6rem;">
+                    <span style="font-size:11px; padding:2px 8px; border-radius:20px; background:${t.is_active==1?'var(--color-mint)':'#f0f0f0'}; color:${t.is_active==1?'#1A7A48':'#888'};">
+                      ${t.is_active==1 ? 'Active' : 'Hidden'}
+                    </span>
+                  </td>
+                  <td style="padding:.6rem; display:flex; gap:.4rem;">
+                    <button class="btn btn-sm ${t.is_active==1?'btn-ghost':'btn-mint'}"
+                      onclick="toggleItem('music_tracks', ${t.id}, ${t.is_active}, loadMusic)">
+                      ${t.is_active==1 ? '<i class="bi bi-slash-circle"></i> Hide' : '<i class="bi bi-check-circle-fill"></i> Show'}
+                    </button>
+                    <button class="btn btn-sm btn-ghost" onclick="deleteItem('music_tracks', ${t.id}, loadMusic)"><i class="bi bi-trash"></i> Delete</button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } catch(e) { console.error(e); }
+    }
+
+    async function loadMeditation() {
+      try {
+        const res  = await fetch(`${API}/api/relaxation/manage.php?action=list&table=meditation_types`);
+        const data = await res.json();
+        const list = document.getElementById('meditation-list');
+        if (!data.data || data.data.length === 0) {
+          list.innerHTML = '<p class="text-muted">No types found.</p>'; return;
+        }
+        list.innerHTML = `
+          <table style="width:100%; border-collapse:collapse;">
+            <thead><tr style="background:var(--color-beige);">
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Icon</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Name</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Description</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Status</th>
+              <th style="padding:.6rem; text-align:left; font-size:12px;">Action</th>
+            </tr></thead>
+            <tbody>
+              ${data.data.map(t => `
+                <tr style="border-bottom:1px solid #f0f0f0;">
+                  <td style="padding:.6rem; font-size:1.3rem;">${t.icon || '<i class="bi bi-person-workspace"></i>'}</td>
+                  <td style="padding:.6rem; font-weight:600; font-size:14px;">${t.name}</td>
+                  <td style="padding:.6rem; font-size:12px; color:#888; max-width:300px;">${t.description || '—'}</td>
+                  <td style="padding:.6rem;">
+                    <span style="font-size:11px; padding:2px 8px; border-radius:20px; background:${t.is_active==1?'var(--color-mint)':'#f0f0f0'}; color:${t.is_active==1?'#1A7A48':'#888'};">
+                      ${t.is_active==1 ? 'Active' : 'Hidden'}
+                    </span>
+                  </td>
+                  <td style="padding:.6rem;">
+                    <button class="btn btn-sm ${t.is_active==1?'btn-ghost':'btn-mint'}"
+                      onclick="toggleItem('meditation_types', ${t.id}, ${t.is_active}, loadMeditation)">
+                      ${t.is_active==1 ? '<i class="bi bi-slash-circle"></i> Hide' : '<i class="bi bi-check-circle-fill"></i> Show'}
+                    </button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } catch(e) { console.error(e); }
+    }
+
+    async function toggleItem(table, id, currentStatus, reloadFn) {
+      const action = currentStatus == 1 ? 'delete' : 'restore';
+      const fd = new FormData();
+      fd.append('action', action);
+      fd.append('table',  table);
+      fd.append('id',     id);
+      try {
+        const res  = await fetch(`${API}/api/relaxation/manage.php`, { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) {
+          toast.success(action === 'delete' ? 'Item hidden.' : 'Item restored.');
+          reloadFn();
+        }
+      } catch(e) { toast.error('Error: ' + e.message); }
+    }
+
+    async function deleteItem(table, id, reloadFn) {
+      if (!confirm('Permanently delete this item?')) return;
+      const fd = new FormData();
+      fd.append('action', 'delete');
+      fd.append('table',  table);
+      fd.append('id',     id);
+      try {
+        const res  = await fetch(`${API}/api/relaxation/manage.php`, { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) { toast.success('Item deleted.'); reloadFn(); }
+      } catch(e) { toast.error('Error: ' + e.message); }
+    }
+
+    function showAddMusic() {
+      document.getElementById('add-music-form').style.display = 'block';
+    }
+
+    async function addMusic() {
+      const title    = document.getElementById('m-title').value.trim();
+      const category = document.getElementById('m-category').value;
+      const audio    = document.getElementById('m-audio').value.trim();
+      const cover    = document.getElementById('m-cover').value.trim();
+
+      if (!title || !audio) { toast.warning('Title and audio URL required.'); return; }
+
+      const fd = new FormData();
+      fd.append('action',    'add_music');
+      fd.append('table',     'music_tracks');
+      fd.append('title',     title);
+      fd.append('category',  category);
+      fd.append('audio_url', audio);
+      fd.append('cover_url', cover);
+
+      try {
+        const res  = await fetch(`${API}/api/relaxation/manage.php`, { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) {
+          toast.success('Track added!');
+          document.getElementById('add-music-form').style.display = 'none';
+          document.getElementById('m-title').value = '';
+          document.getElementById('m-audio').value = '';
+          document.getElementById('m-cover').value = '';
+          loadMusic();
+        } else {
+          toast.error(data.error || 'Could not add track.');
+        }
+      } catch(e) { toast.error('Error: ' + e.message); }
+    }
+  </script>
+</body>
+</html>

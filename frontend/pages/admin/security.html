@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/admin/security.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Security &amp; Backups — MindCare Admin</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/admin.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <span class="badge badge-red">System Admin</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Admin Controls</div>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+        <a href="dashboard.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-people-fill"></i></span> User Management</a>
+        <a href="content.html"   class="sidebar-link"><span class="link-icon"><i class="bi bi-music-note-beamed"></i></span> Content Manager</a>
+        <a href="security.html"  class="sidebar-link active"><span class="link-icon"><i class="bi bi-shield-check"></i></span> Security &amp; Backups</a>
+        <a href="logs.html"      class="sidebar-link"><span class="link-icon"><i class="bi bi-clipboard-check"></i></span> Activity Logs</a>
+        <a href="guide.html"     class="sidebar-link"><span class="link-icon"><i class="bi bi-book-half"></i></span> System Guide</a>
+        <a href="notes.html"     class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Notes</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>System Security &amp; Backups <i class="bi bi-shield-check"></i></h1>
+        <p>Moderate forum reports, update emergency numbers, and back up the database</p>
+      </div>
+
+      <div class="two-col">
+
+        <div>
+          <div class="card" style="margin-bottom:1.25rem;">
+            <div class="card-title">Reported Forum Posts</div>
+            <div id="reported-posts">
+              <div style="border:1.5px solid rgba(224,90,58,.25); border-radius:var(--radius-sm); padding:.9rem; background:var(--red-pale); margin-bottom:.65rem;">
+                <div style="font-size:12px; color:var(--red); font-weight:700; margin-bottom:5px;"><i class="bi bi-flag-fill"></i> Reported Post — Forum #4821</div>
+                <div style="font-size:13px; color:var(--text-2); line-height:1.6; margin-bottom:.6rem;">"This is getting really bad and I don't see any way out of this situation..."</div>
+                <div style="display:flex; gap:.4rem;">
+                  <button class="btn btn-danger btn-sm">Delete Post</button>
+                  <button class="btn btn-ghost btn-sm">Dismiss Report</button>
+                </div>
+              </div>
+              <div style="border:1.5px solid rgba(224,90,58,.25); border-radius:var(--radius-sm); padding:.9rem; background:var(--red-pale);">
+                <div style="font-size:12px; color:var(--red); font-weight:700; margin-bottom:5px;"><i class="bi bi-flag-fill"></i> Reported Post — Forum #4798</div>
+                <div style="font-size:13px; color:var(--text-2); line-height:1.6; margin-bottom:.6rem;">"Does anyone know where to get pills without a prescription..."</div>
+                <div style="display:flex; gap:.4rem;">
+                  <button class="btn btn-danger btn-sm">Delete Post</button>
+                  <button class="btn btn-ghost btn-sm">Dismiss Report</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Edit Emergency Contact Numbers</div>
+            <div class="form-group">
+              <label class="form-label">Campus Security</label>
+              <input class="form-input" id="set-campus-security" placeholder="011-YYYY">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Health Center</label>
+              <input class="form-input" id="set-health-center" placeholder="011-ZZZZ">
+            </div>
+            <div class="form-group">
+              <label class="form-label">National Crisis Helpline (Sumithrayo)</label>
+              <input class="form-input" id="set-crisis-helpline" placeholder="011-2692909">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Admin Contact Email <span style="color:var(--text-3); font-weight:400;">(shown on Login page)</span></label>
+              <input class="form-input" id="set-admin-email" placeholder="admin@edu.lnbti.lk">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Admin Contact Phone <span style="color:var(--text-3); font-weight:400;">(shown on Login page)</span></label>
+              <input class="form-input" id="set-admin-phone" placeholder="011-XXXXXXX">
+            </div>
+            <div id="settings-status" style="font-size:12.5px; color:var(--color-mint); margin-bottom:.6rem; display:none;"><i class="bi bi-check-circle-fill"></i> Saved.</div>
+            <button class="btn btn-primary" onclick="saveContactSettings()" id="save-settings-btn">Save Contact Numbers</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" style="margin-bottom:1.25rem;">
+            <div class="card-title">Database Backup</div>
+            <p style="font-size:13.5px; color:var(--text-2); line-height:1.7; margin-bottom:1rem;">
+              Run a full MySQL backup of <code style="background:var(--beige-light); padding:2px 6px; border-radius:4px;">mindcare_db</code> — structure and data, saved as a downloadable <code style="background:var(--beige-light); padding:2px 6px; border-radius:4px;">.sql</code> file. This runs on demand, whenever you click the button below.
+            </p>
+            <div id="backup-status" style="background:var(--beige-light); border-radius:var(--radius-sm); padding:1rem; margin-bottom:1rem; font-size:12px; color:var(--text-2); border:1.5px solid var(--border); font-family:monospace; line-height:1.8;">
+              Loading last backup info…
+            </div>
+            <button class="btn btn-primary btn-full" onclick="runBackup()">▶ Run Database Backup Now</button>
+            <button class="btn btn-ghost btn-full" style="margin-top:.6rem;" onclick="downloadBackup()">⬇ Download Latest Backup</button>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Backup History</div>
+            <div id="backup-history" style="display:flex; flex-direction:column; gap:.5rem;">
+              <p style="color:var(--text-3); font-size:13px;">Loading…</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/auth.js"></script>
+  <script>
+    const ADMIN_API = window.location.origin + '/mindcare_final/backend/api/admin';
+    let latestBackupFile = null;
+
+    document.addEventListener('DOMContentLoaded', () => { loadBackups(); loadContactSettings(); });
+
+    function fmtSize(bytes) {
+      if (!bytes && bytes !== 0) return '';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    async function loadBackups() {
+      const hist   = document.getElementById('backup-history');
+      const status = document.getElementById('backup-status');
+      try {
+        const res  = await fetch(`${ADMIN_API}/list_backups.php`);
+        const data = await res.json();
+        const list = data.backups || [];
+
+        if (list.length === 0) {
+          status.innerHTML = 'No backups yet. Click “Run Database Backup Now” to create your first one.';
+          hist.innerHTML   = '<p style="color:var(--text-3); font-size:13px;">No backup files found.</p>';
+          latestBackupFile = null;
+          return;
+        }
+
+        const latest = list[0];
+        latestBackupFile = latest.name;
+        status.innerHTML = `Last backup: ${latest.modified}<br>File: ${latest.name}<br>Size: ${fmtSize(latest.size)}<br>Status: <i class="bi bi-check-circle-fill"></i> Complete`;
+
+        hist.innerHTML = list.map(b => `
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:.5rem 0; border-bottom:1px solid var(--beige-light); gap:.75rem;">
+            <span style="flex:1; word-break:break-all;">${b.name}<br><span style="font-size:11px; color:var(--text-3);">${b.modified}</span></span>
+            <span class="badge badge-mint">${fmtSize(b.size)}</span>
+            <a class="btn btn-ghost btn-sm" href="${ADMIN_API}/download_backup.php?file=${encodeURIComponent(b.name)}">⬇</a>
+          </div>`).join('');
+      } catch (e) {
+        if (status) status.innerHTML = 'Could not load backup info. Is XAMPP running?';
+        if (hist)   hist.innerHTML   = '<p style="color:red; font-size:13px;">Could not load history.</p>';
+      }
+    }
+
+    async function runBackup() {
+      if (!confirm('Run a full database backup now?')) return;
+      try {
+        const res  = await fetch(`${ADMIN_API}/backup.php`, { method:'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert('Backup complete! File: ' + data.filename);
+          loadBackups();
+        } else {
+          alert('Error: ' + (data.error || 'Backup failed.'));
+        }
+      } catch { alert('Network error. Make sure XAMPP is running.'); }
+    }
+
+    function downloadBackup() {
+      if (!latestBackupFile) { alert('No backup available yet. Run a backup first.'); return; }
+      window.location = `${ADMIN_API}/download_backup.php?file=${encodeURIComponent(latestBackupFile)}`;
+    }
+
+    // ── Emergency Contact Numbers (also feeds the Login page + Guardian pages) ──
+    async function loadContactSettings() {
+      try {
+        const res  = await fetch(`${ADMIN_API}/get_settings.php`);
+        const data = await res.json();
+        const s = data.settings || {};
+        document.getElementById('set-campus-security').value = s.campus_security_phone   || '';
+        document.getElementById('set-health-center').value   = s.health_center_phone     || '';
+        document.getElementById('set-crisis-helpline').value = s.crisis_helpline_phone   || '';
+        document.getElementById('set-admin-email').value     = s.admin_contact_email     || '';
+        document.getElementById('set-admin-phone').value     = s.admin_contact_phone     || '';
+      } catch (e) { console.error('Could not load settings', e); }
+    }
+
+    async function saveContactSettings() {
+      const btn = document.getElementById('save-settings-btn');
+      btn.disabled = true;
+      const originalText = btn.textContent;
+      btn.textContent = 'Saving…';
+
+      const fd = new FormData();
+      fd.append('campus_security_phone', document.getElementById('set-campus-security').value.trim());
+      fd.append('health_center_phone',   document.getElementById('set-health-center').value.trim());
+      fd.append('crisis_helpline_phone', document.getElementById('set-crisis-helpline').value.trim());
+      fd.append('admin_contact_email',   document.getElementById('set-admin-email').value.trim());
+      fd.append('admin_contact_phone',   document.getElementById('set-admin-phone').value.trim());
+
+      try {
+        const res  = await fetch(`${ADMIN_API}/save_settings.php`, { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) {
+          const status = document.getElementById('settings-status');
+          status.style.display = 'block';
+          setTimeout(() => { status.style.display = 'none'; }, 3000);
+        } else {
+          alert(data.error || 'Could not save settings.');
+        }
+      } catch (e) {
+        alert('Network error. Please try again.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+  </script>
+</body>
+</html>

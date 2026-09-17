@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/admin/logs.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Activity Logs — MindCare Admin</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/admin.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <span class="badge badge-red">System Admin</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Admin Controls</div>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+        <a href="dashboard.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-people-fill"></i></span> User Management</a>
+        <a href="content.html"   class="sidebar-link"><span class="link-icon"><i class="bi bi-music-note-beamed"></i></span> Content Manager</a>
+        <a href="security.html"  class="sidebar-link"><span class="link-icon"><i class="bi bi-shield-check"></i></span> Security &amp; Backups</a>
+        <a href="logs.html"      class="sidebar-link active"><span class="link-icon"><i class="bi bi-clipboard-check"></i></span> Activity Logs</a>
+        <a href="guide.html"     class="sidebar-link"><span class="link-icon"><i class="bi bi-book-half"></i></span> System Guide</a>
+        <a href="notes.html"     class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Notes</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Activity Logs <i class="bi bi-clipboard-check"></i></h1>
+        <p>Recent system activity — logins, backups, and account actions. The 100 most recent events.</p>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div class="card-title" style="margin:0;">System Activity</div>
+          <div style="display:flex; gap:.5rem;">
+            <button class="btn btn-ghost btn-sm" onclick="loadLogs()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+            <button class="btn btn-danger btn-sm" onclick="clearAllLogs()"><i class="bi bi-trash"></i> Clear All</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>User</th><th>Role</th><th>Action</th><th>IP</th><th>Manage</th></tr></thead>
+            <tbody id="logs-table">
+              <tr><td colspan="6" style="text-align:center; color:var(--text-3); padding:2rem;">Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Styled confirm popup (replaces browser confirm) -->
+  <div class="modal-overlay" id="confirm-modal" style="display:none;" onclick="if(event.target===this) _confirmResolve(false)">
+    <div class="modal-box" style="max-width:400px; text-align:center; position:relative;">
+      <div id="confirm-icon" style="font-size:2.75rem; margin-bottom:.5rem;"><i class="bi bi-trash"></i></div>
+      <h3 id="confirm-title" style="margin:0 0 .45rem;">Delete this log entry?</h3>
+      <p id="confirm-msg" style="font-size:13.5px; color:var(--text-2); line-height:1.7; margin:0 0 1.35rem;">This entry will be permanently removed from the activity log.</p>
+      <div style="display:flex; gap:.6rem; justify-content:center;">
+        <button class="btn btn-ghost" onclick="_confirmResolve(false)">Cancel</button>
+        <button class="btn btn-danger" id="confirm-ok" onclick="_confirmResolve(true)">Delete</button>
+      </div>
+    </div>
+  </div>
+  <script src="../../js/auth.js"></script>
+  <script>
+    const LOGS_API   = window.location.origin + '/mindcare_final/backend/api/admin/logs.php';
+    const MANAGE_API = window.location.origin + '/mindcare_final/backend/api/admin/manage_logs.php';
+
+    document.addEventListener('DOMContentLoaded', loadLogs);
+
+    async function loadLogs() {
+      const tbody = document.getElementById('logs-table');
+      try {
+        const res  = await fetch(LOGS_API);
+        const data = await res.json();
+        const logs = data.logs || [];
+        if (!logs.length) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-3); padding:2rem;">No activity logged yet.</td></tr>';
+          return;
+        }
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const roleBadge = r => ({
+          student:          '<span class="badge badge-beige">Student</span>',
+          counselor:        '<span class="badge badge-mint">Counselor</span>',
+          learning_advisor: '<span class="badge" style="background:#e0e7ff; color:#3730a3;">Advisor</span>',
+          admin:            '<span class="badge badge-red">Admin</span>'
+        }[r] || '<span class="badge badge-beige">System</span>');
+
+        tbody.innerHTML = logs.map(l => {
+          const pinned = Number(l.is_pinned) === 1;
+          return `
+          <tr style="${pinned ? 'background:#FEF3DF;' : ''}">
+            <td style="font-size:12px; color:var(--text-3); white-space:nowrap;">${pinned ? '<i class="bi bi-pin-angle-fill"></i> ' : ''}${esc(l.created_at)}</td>
+            <td><strong>${esc(l.full_name || 'System')}</strong></td>
+            <td>${roleBadge(l.role)}</td>
+            <td style="font-size:13px;">${esc(l.action)}</td>
+            <td style="font-size:12px; color:var(--text-3);">${esc(l.ip_address || '—')}</td>
+            <td style="display:flex; gap:.35rem; flex-wrap:wrap;">
+              <button class="btn btn-sm btn-ghost" title="${pinned ? 'Unpin' : 'Pin'}" onclick="pinLog(${l.id})">${pinned ? '<i class="bi bi-pin-angle-fill"></i> Unpin' : '<i class="bi bi-pin-angle-fill"></i> Pin'}</button>
+              <button class="btn btn-sm btn-ghost" title="Delete" onclick="deleteLog(${l.id})"><i class="bi bi-trash"></i></button>
+            </td>
+          </tr>`;
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color:red; text-align:center;">Could not load logs. Is XAMPP running?</td></tr>`;
+      }
+    }
+
+    // ── Styled confirm popup (promise-based) ──
+    let _confirmCb = null;
+    function askConfirm({ icon = '<i class="bi bi-trash"></i>', title = 'Are you sure?', msg = '', okText = 'Delete', danger = true }) {
+      document.getElementById('confirm-icon').innerHTML  = icon;
+      document.getElementById('confirm-title').textContent = title;
+      document.getElementById('confirm-msg').textContent   = msg;
+      const ok = document.getElementById('confirm-ok');
+      ok.textContent = okText;
+      ok.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+      document.getElementById('confirm-modal').style.display = 'flex';
+      return new Promise(resolve => { _confirmCb = resolve; });
+    }
+    function _confirmResolve(val) {
+      document.getElementById('confirm-modal').style.display = 'none';
+      if (_confirmCb) { _confirmCb(val); _confirmCb = null; }
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.getElementById('confirm-modal').style.display === 'flex') _confirmResolve(false);
+    });
+
+    async function pinLog(id) {
+      const fd = new FormData(); fd.append('action', 'pin'); fd.append('id', id);
+      const res = await fetch(MANAGE_API, { method:'POST', body:fd });
+      if ((await res.json()).success) loadLogs();
+    }
+
+    async function deleteLog(id) {
+      const ok = await askConfirm({
+        icon: '<i class="bi bi-trash"></i>',
+        title: 'Delete this log entry?',
+        msg: 'This entry will be permanently removed from the activity log. This can’t be undone.',
+        okText: 'Delete'
+      });
+      if (!ok) return;
+      const fd = new FormData(); fd.append('action', 'delete'); fd.append('id', id);
+      const res = await fetch(MANAGE_API, { method:'POST', body:fd });
+      if ((await res.json()).success) loadLogs();
+    }
+
+    async function clearAllLogs() {
+      const ok = await askConfirm({
+        icon: '<i class="bi bi-eraser-fill"></i>',
+        title: 'Clear all logs?',
+        msg: 'Every entry will be deleted — but your <i class="bi bi-pin-angle-fill"></i> pinned entries will be kept safe.',
+        okText: 'Clear All'
+      });
+      if (!ok) return;
+      const fd = new FormData(); fd.append('action', 'delete_all');
+      const res = await fetch(MANAGE_API, { method:'POST', body:fd });
+      const data = await res.json();
+      if (data.success) { loadLogs(); }
+    }
+  </script>
+</body>
+</html>
