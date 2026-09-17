@@ -21,7 +21,7 @@ async function checkEmail(e) {
   fd.append('email', email);
 
   try {
-    const res  = await fetch(window.location.origin + '/mindcare_final/backend/auth/send_otp.php', { method:'POST', body:fd });
+    const res  = await fetch('../../backend/auth/send_otp.php', { method:'POST', body:fd });
     const data = await res.json();
     if (data.error) { showError(data.error); setBtnLoading(false); return; }
     if (data.status === 'existing_user') {
@@ -60,21 +60,19 @@ async function doLogin(e) {
   if (role) fd.append('role', role);
 
   try {
-    const res  = await fetch(window.location.origin + '/mindcare_final/backend/auth/login.php', { method:'POST', body:fd });
+    const res  = await fetch('../../backend/auth/login.php', { method:'POST', body:fd });
     const data = await res.json();
     if (data.status === 'success' || data.success) {
-      if (data.redirect) {
-        window.location.href = data.redirect;
-      } else {
-        redirectByRole(data.role);
-      }
+      const redirectUrl = data.redirect || '../pages/student_dashboard.html';
+      window.location.href = redirectUrl;
     } else {
-      showError(data.error || 'Login failed.');
+      showError(data.message || data.error || 'Login failed.');
     }
-  } catch {
-    showError('Network error — make sure XAMPP is running.');
+  } catch (err) {
+    showError(err && err.message ? err.message : 'Network error — please check your connection.');
+  } finally {
+    setBtnLoading(false);
   }
-  setBtnLoading(false);
 }
 
 function previewRegPhoto(event) {
@@ -125,7 +123,7 @@ async function verifyOTP() {
   if (photoFile) fd.append('photo', photoFile);
 
   try {
-    const res  = await fetch(window.location.origin + '/mindcare_final/backend/auth/verify_otp.php', { method:'POST', body:fd });
+    const res  = await fetch('../../backend/auth/verify_otp.php', { method:'POST', body:fd });
     const data = await res.json();
     if (data.success && data.pending) {
       showPendingScreen(data.full_name);
@@ -193,7 +191,7 @@ async function sendResetCode() {
   fd.append('email', email);
 
   try {
-    const res  = await fetch(window.location.origin + '/mindcare_final/backend/auth/forgot_password.php', { method:'POST', body:fd });
+    const res  = await fetch('../../backend/auth/forgot_password.php', { method:'POST', body:fd });
     const data = await res.json();
     if (data.success) {
       document.getElementById('reset-email-display').textContent = email;
@@ -231,7 +229,7 @@ async function confirmPasswordReset() {
   fd.append('new_password', newPassword);
 
   try {
-    const res  = await fetch(window.location.origin + '/mindcare_final/backend/auth/reset_password_confirm.php', { method:'POST', body:fd });
+    const res  = await fetch('../../backend/auth/reset_password_confirm.php', { method:'POST', body:fd });
     const data = await res.json();
     if (data.success) {
       showStep('step-password');
@@ -266,24 +264,27 @@ function showError(msg) {
 }
 
 function setBtnLoading(on, text) {
-  const b = document.getElementById('main-btn');
-  if (b) { b.disabled = on; b.textContent = on ? text : 'Continue ->'; }
+  const b  = document.getElementById('main-btn');
+  const lb = document.getElementById('login-btn');
+  if (b)  { b.disabled = on; b.textContent = on ? text : 'Continue →'; }
+  if (lb) { lb.disabled = on; lb.textContent = on ? text : 'Sign In →'; }
 }
 
 function redirectByRole(role) {
-  const base = window.location.origin + '/mindcare_final/frontend/pages/';
   const map = {
-    student:          base + 'student_dashboard.html',
-    counselor:        base + 'counselor/dashboard.html',
-    learning_advisor: base + 'advisor/dashboard.html',
-    admin:            base + 'admin/dashboard.html'
+    student:          '../pages/student_dashboard.html',
+    counselor:        '../pages/counselor/dashboard.html',
+    learning_advisor: '../pages/advisor/dashboard.html',
+    admin:            '../pages/admin/dashboard.html'
   };
-  window.location.href = map[role] || (base + 'login.html');
+  window.location.href = map[role] || '../pages/login.html';
 }
 
 async function doLogout() {
-  await fetch(window.location.origin + '/mindcare_final/backend/auth/logout.php');
-  window.location.href = window.location.origin + '/mindcare_final/frontend/pages/login.html';
+  try {
+    await fetch('../../backend/auth/logout.php');
+  } catch (e) { /* ignore */ }
+  window.location.href = '../pages/login.html';
 }
 
 // Banner shown when a counselor/admin is previewing a student relaxation page.
@@ -306,11 +307,11 @@ function showStaffPreviewBanner(role) {
 
 async function loadUserInfo() {
   try {
-    const res  = await fetch(window.location.origin + '/mindcare_final/backend/auth/session.php');
+    const res  = await fetch('../../backend/auth/session.php');
     const data = await res.json();
 
     if (!data.logged_in) {
-      window.location.href = window.location.origin + '/mindcare_final/frontend/pages/login.html';
+      window.location.href = '../pages/login.html';
       return;
     }
 
@@ -343,7 +344,7 @@ async function loadUserInfo() {
         a.style.background = 'none';
         a.style.boxShadow = 'none';
         const img = document.createElement('img');
-        img.src = window.location.origin + '/mindcare_final/frontend/assets/images/profiles/' + data.photo_url;
+        img.src = '../../assets/images/profiles/' + data.photo_url;
         img.style.cssText = 'width:100%; height:100%; border-radius:50%; object-fit:cover;';
         a.appendChild(img);
       } else {
@@ -360,7 +361,7 @@ async function loadUserInfo() {
 
 async function loadRiskAlertBadge() {
   try {
-    const res  = await fetch(window.location.origin + '/mindcare_final/backend/api/alerts/count.php');
+    const res  = await fetch('../../backend/api/alerts/count.php');
     const data = await res.json();
     const count = data.count || 0;
 

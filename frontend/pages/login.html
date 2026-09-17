@@ -202,7 +202,7 @@
     // been set yet, or the request fails, the hardcoded fallback links above stay as-is.
     (async function loadAdminContact() {
       try {
-        const res  = await fetch(window.location.origin + '/mindcare_final/backend/api/public/settings.php');
+        const res  = await fetch('../../backend/api/public/settings.php');
         const data = await res.json();
         const s = data.settings || {};
         if (s.admin_contact_email) {
