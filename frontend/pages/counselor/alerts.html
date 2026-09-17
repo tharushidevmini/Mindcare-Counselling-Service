@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/counselor/alerts.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Alerts — MindCare Counselor</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/counselor.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <div class="avatar" id="user-avatar">C</div>
+      <span id="user-name" style="font-weight:600;">Counselor</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Counselor Panel</div>
+        <a href="dashboard.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-calendar3"></i></span> Appointments</a>
+        <a href="alerts.html"    class="sidebar-link active"><span class="link-icon"><i class="bi bi-exclamation-triangle-fill"></i></span> Student Alerts</a>
+        <a href="resources.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-upload"></i></span> Resource Manager</a>
+        <a href="diary-review.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-text"></i></span> Shared Diaries</a>
+        <a href="wellbeing.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-compass"></i></span> Student Wellbeing</a>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+        <a href="diary.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Notes</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Student Alerts — Red Flags <i class="bi bi-exclamation-triangle-fill"></i></h1>
+        <p>Students whose shared diary entries contained worrying keywords, flagged automatically for quick review</p>
+      </div>
+
+      <div id="alerts-container"><p class="text-muted">Loading alerts...</p></div>
+
+      <div class="card-beige" style="margin-top:1.5rem;">
+        <div class="card-title">How this works</div>
+        <p style="font-size:13.5px; color:var(--text-2); line-height:1.75;">
+          Whenever a student saves a diary entry, the system automatically scans the content for distress keywords in <strong>English, Sinhala, and Tamil</strong> — even for private entries, because safety comes first. If concerning keywords are found, the student appears here so you can reach out early. Private diary text is never shown; you only see that the student may need support.
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/auth.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', loadAlerts);
+
+    const ALERTS_API = window.location.origin + '/mindcare_final/backend/api/alerts';
+
+    async function loadAlerts() {
+      try {
+        const res  = await fetch(`${ALERTS_API}/list.php`);
+        const data = await res.json();
+        const box  = document.getElementById('alerts-container');
+        if (!box) return;
+        if (!data.alerts || data.alerts.length === 0) {
+          box.innerHTML = '<div class="alert alert-success"><i class="bi bi-check-circle-fill"></i> No open risk alerts at this time. All students appear to be doing well.</div>'; return;
+        }
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        box.innerHTML = data.alerts.map(a => {
+          const isShared = Number(a.shared) === 1;
+          const note = isShared
+            ? '<span style="font-size:12px; color:#1A7A48;">Student shared this entry — you can open it under Shared Diaries.</span>'
+            : '<span style="font-size:12px; color:#8C7060;">Private entry — flagged by the safety scan. The text stays private; please reach out to check in.</span>';
+          const subject = encodeURIComponent('MindCare — Just checking in');
+          const bodyTxt = encodeURIComponent(`Hi ${a.student_name},\n\nI wanted to check in and see how you are doing. I am here if you would like to talk — you can reply here or book a session anytime.\n\nTake care,\nYour counselor`);
+          const mail = a.student_email ? `mailto:${a.student_email}?subject=${subject}&body=${bodyTxt}` : '#';
+          return `
+          <div class="risk-banner">
+            <span style="font-size:1.5rem;"><i class="bi bi-exclamation-triangle-fill"></i></span>
+            <div style="flex:1;">
+              <div class="risk-label">${esc(a.severity)} Risk — ${esc(a.student_name)}${a.student_id ? ' (' + esc(a.student_id) + ')' : ''}</div>
+              <p style="font-size:13.5px; color:#7A2010; margin-top:3px;">Keywords found: <strong>${esc(a.keywords_found)}</strong></p>
+              <p style="margin-top:3px;">${note}</p>
+              <p style="font-size:12px; color:var(--text-3); margin-top:3px;">Flagged on ${esc(a.created_at)}</p>
+            </div>
+            <a class="btn btn-primary btn-sm" href="${mail}" ${a.student_email ? '' : 'onclick="alert(\'No email on file for this student.\');return false;"'}><i class="bi bi-envelope-fill"></i> Contact Student</a>
+            <button class="btn btn-ghost btn-sm" onclick="markReviewed(${a.id})">Mark Reviewed <i class="bi bi-check-lg"></i></button>
+          </div>`;
+        }).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    async function markReviewed(id) {
+      const fd = new FormData(); fd.append('alert_id', id);
+      const res  = await fetch(`${ALERTS_API}/review.php`, { method:'POST', body:fd });
+      const data = await res.json();
+      if (data.success) loadAlerts();
+      else alert('Error: ' + data.error);
+    }
+  </script>
+</body>
+</html>

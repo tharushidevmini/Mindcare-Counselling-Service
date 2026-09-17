@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/counselor/relaxation.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relaxation Zone Manager — MindCare Counselor</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/counselor.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <style>
+    .rz-tabs { max-width: 420px; }
+    .rz-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-top: 1rem; }
+    .rz-item { border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; background: var(--white); display: flex; flex-direction: column; gap: .5rem; }
+    .rz-item.inactive { opacity: .55; }
+    .rz-item-head { display: flex; align-items: center; gap: .6rem; }
+    .rz-icon { font-size: 1.6rem; }
+    .rz-title { font-weight: 700; font-size: 14.5px; flex: 1; }
+    .rz-sub { font-size: 12px; color: var(--text-3); }
+    .rz-actions { display: flex; gap: .4rem; margin-top: .3rem; }
+    .rz-empty { color: var(--text-3); font-size: 13.5px; padding: 1rem 0; }
+    .rz-phase-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+    #rz-modal-overlay { display: none; }
+  </style>
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <div class="avatar" id="user-avatar">C</div>
+      <span id="user-name" style="font-weight:600;">Counselor</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Counselor Panel</div>
+        <a href="dashboard.html"   class="sidebar-link"><span class="link-icon"><i class="bi bi-calendar3"></i></span> Appointments</a>
+        <a href="alerts.html"      class="sidebar-link"><span class="link-icon"><i class="bi bi-exclamation-triangle-fill"></i></span> Student Alerts</a>
+        <a href="resources.html"   class="sidebar-link"><span class="link-icon"><i class="bi bi-upload"></i></span> Resource Manager</a>
+        <a href="diary-review.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> Shared Diaries</a>
+        <a href="wellbeing.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-speedometer2"></i></span> Student Wellbeing</a>
+        <a href="relaxation.html"  class="sidebar-link active"><span class="link-icon"><i class="bi bi-flower1"></i></span> Relaxation Zone</a>
+        <a href="diary.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Notes</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+        <div>
+          <h1>Relaxation Zone Manager <i class="bi bi-flower1"></i></h1>
+          <p>Add, edit or remove breathing exercises, calming music and guided meditations shown to students</p>
+        </div>
+        <button class="btn btn-mint" onclick="openStudentPreview()" style="flex-shrink:0;"><i class="bi bi-eye-fill"></i> Preview as Student</button>
+      </div>
+
+      <div class="card">
+        <div class="role-tabs rz-tabs">
+          <button class="role-tab active" id="tab-breathing" onclick="switchTab('relaxation_exercises')"><i class="bi bi-wind"></i> Breathing</button>
+          <button class="role-tab" id="tab-music" onclick="switchTab('music_tracks')"><i class="bi bi-music-note-beamed"></i> Music</button>
+          <button class="role-tab" id="tab-meditation" onclick="switchTab('meditation_types')"><i class="bi bi-flower3"></i> Meditation</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:.5rem;">
+          <div class="card-title" id="rz-section-title" style="margin-bottom:0;">Breathing Exercises</div>
+          <button class="btn btn-mint btn-sm" onclick="openAddModal()">+ Add New</button>
+        </div>
+
+        <div class="rz-grid" id="rz-grid">
+          <div class="rz-empty">Loading…</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ── Add / Edit Modal ── -->
+  <div class="modal-overlay" id="rz-modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal-box" style="position:relative;">
+      <button type="button" aria-label="Close" onclick="closeModal()"
+        style="position:absolute; top:14px; right:16px; background:none; border:none; font-size:22px; color:var(--text-3); cursor:pointer; line-height:1;"><i class="bi bi-x-lg"></i></button>
+      <h3 id="rz-modal-title">Add Breathing Exercise</h3>
+      <p class="modal-sub" id="rz-modal-sub">Fill in the details below — shown to students right away.</p>
+
+      <div id="rz-form-fields"></div>
+
+      <div style="display:flex; gap:.6rem; margin-top:1.2rem;">
+        <button class="btn btn-ghost btn-full" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-mint btn-full" onclick="saveItem()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/auth.js?v=5"></script>
+  <script>
+    const API = '../../../backend/api/relaxation/manage.php';
+
+    let currentTable = 'relaxation_exercises';
+    let currentItems = [];
+    let editingId = null;
+
+    const sectionMeta = {
+      relaxation_exercises: { title: 'Breathing Exercises', label: 'Breathing Exercise' },
+      music_tracks:         { title: 'Music Tracks',        label: 'Music Track' },
+      meditation_types:     { title: 'Meditation Types',    label: 'Meditation' },
+    };
+
+    function switchTab(table) {
+      currentTable = table;
+      document.getElementById('tab-breathing').classList.toggle('active', table === 'relaxation_exercises');
+      document.getElementById('tab-music').classList.toggle('active', table === 'music_tracks');
+      document.getElementById('tab-meditation').classList.toggle('active', table === 'meditation_types');
+      document.getElementById('rz-section-title').textContent = sectionMeta[table].title;
+      loadList();
+    }
+
+    async function loadList() {
+      const grid = document.getElementById('rz-grid');
+      grid.innerHTML = '<div class="rz-empty">Loading…</div>';
+      try {
+        const res  = await fetch(`${API}?action=list&table=${currentTable}`);
+        const data = await res.json();
+        if (data.error) { grid.innerHTML = `<div class="rz-empty">${data.error}</div>`; return; }
+        currentItems = data.data || [];
+        renderGrid();
+      } catch {
+        grid.innerHTML = '<div class="rz-empty">Network error — make sure XAMPP is running.</div>';
+      }
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('rz-grid');
+      if (!currentItems.length) { grid.innerHTML = '<div class="rz-empty">Nothing here yet — click "+ Add New" to create one.</div>'; return; }
+
+      grid.innerHTML = currentItems.map(item => {
+        const name = item.title || item.name;
+        const sub  = currentTable === 'music_tracks' ? (item.category || '')
+                   : currentTable === 'meditation_types' ? (item.description || '')
+                   : (item.description || '');
+        const icon = item.icon || (currentTable === 'music_tracks' ? '🎵' : '🌬');
+        const isActive = Number(item.is_active) === 1;
+        return `
+          <div class="rz-item ${isActive ? '' : 'inactive'}">
+            <div class="rz-item-head">
+              <span class="rz-icon">${icon}</span>
+              <span class="rz-title">${escapeHtml(name)}</span>
+              <span class="badge ${isActive ? 'badge-mint' : 'badge-beige'}">${isActive ? 'Live' : 'Hidden'}</span>
+            </div>
+            ${sub ? `<div class="rz-sub">${escapeHtml(sub)}</div>` : ''}
+            <div class="rz-actions">
+              <button class="btn btn-ghost btn-sm" onclick="openEditModal(${item.id})">Edit</button>
+              ${isActive
+                ? `<button class="btn btn-danger btn-sm" onclick="deleteItem(${item.id})">Delete</button>`
+                : `<button class="btn btn-mint btn-sm" onclick="restoreItem(${item.id})">Restore</button>`}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // ── Modal open/close ──────────────────────────
+    function openAddModal() {
+      editingId = null;
+      document.getElementById('rz-modal-title').textContent = `Add ${sectionMeta[currentTable].label}`;
+      document.getElementById('rz-modal-sub').textContent = 'Fill in the details below — shown to students right away.';
+      document.getElementById('rz-form-fields').innerHTML = formHtml(currentTable, {});
+      document.getElementById('rz-modal-overlay').style.display = 'flex';
+    }
+
+    function openEditModal(id) {
+      const item = currentItems.find(i => i.id === id);
+      if (!item) return;
+      editingId = id;
+      document.getElementById('rz-modal-title').textContent = `Edit ${sectionMeta[currentTable].label}`;
+      document.getElementById('rz-modal-sub').textContent = 'Update the details and save.';
+      document.getElementById('rz-form-fields').innerHTML = formHtml(currentTable, item);
+      document.getElementById('rz-modal-overlay').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('rz-modal-overlay').style.display = 'none';
+    }
+
+    // Press Esc to close whichever modal is open (no leaving the page)
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      const add = document.getElementById('rz-modal-overlay');
+      const prev = document.getElementById('preview-modal');
+      if (add && add.style.display === 'flex') closeModal();
+      if (prev && prev.style.display === 'flex') closeStudentPreview();
+    });
+
+    // ── Per-table form builders ───────────────────
+    function formHtml(table, item) {
+      if (table === 'music_tracks') {
+        return `
+          <div class="form-group"><label class="form-label">Title</label>
+            <input class="form-input" id="f-title" value="${escapeHtml(item.title)}" placeholder="e.g. Gentle Rain"></div>
+          <div class="form-group"><label class="form-label">Category</label>
+            <select class="form-input" id="f-category">
+              ${['calm','sleep','energy','water','bowl'].map(c => `<option value="${c}" ${item.category===c?'selected':''}>${c}</option>`).join('')}
+            </select></div>
+          <div class="form-group"><label class="form-label">Cover Image URL</label>
+            <input class="form-input" id="f-cover" value="${escapeHtml(item.cover_url)}" placeholder="https://..."></div>
+          <div class="form-group"><label class="form-label">Audio File URL</label>
+            <input class="form-input" id="f-audio" value="${escapeHtml(item.audio_url)}" placeholder="https://...mp3"></div>`;
+      }
+
+      if (table === 'relaxation_exercises') {
+        const d = decodePhases(item.phases || []);
+        return `
+          <div class="form-group"><label class="form-label">Name</label>
+            <input class="form-input" id="f-name" value="${escapeHtml(item.name)}" placeholder="e.g. 4-7-8 Breathing"></div>
+          <div class="form-group"><label class="form-label">Icon (emoji)</label>
+            <input class="form-input" id="f-icon" value="${escapeHtml(item.icon || '🌬')}" maxlength="4"></div>
+          <div class="form-group"><label class="form-label">Description</label>
+            <textarea class="form-input" id="f-desc" style="min-height:70px;">${escapeHtml(item.description)}</textarea></div>
+          <div class="rz-phase-row">
+            <div class="form-group"><label class="form-label">Inhale (seconds)</label>
+              <input class="form-input" type="number" min="1" id="f-inhale" value="${d.inhale}"></div>
+            <div class="form-group"><label class="form-label">Hold after inhale (0 = skip)</label>
+              <input class="form-input" type="number" min="0" id="f-hold1" value="${d.hold1}"></div>
+            <div class="form-group"><label class="form-label">Exhale (seconds)</label>
+              <input class="form-input" type="number" min="1" id="f-exhale" value="${d.exhale}"></div>
+            <div class="form-group"><label class="form-label">Hold after exhale (0 = skip)</label>
+              <input class="form-input" type="number" min="0" id="f-hold2" value="${d.hold2}"></div>
+          </div>`;
+      }
+
+      if (table === 'meditation_types') {
+        const steps = (item.steps || []).join('\n');
+        return `
+          <div class="form-group"><label class="form-label">Name</label>
+            <input class="form-input" id="f-name" value="${escapeHtml(item.name)}" placeholder="e.g. Focus"></div>
+          <div class="form-group"><label class="form-label">Icon (emoji)</label>
+            <input class="form-input" id="f-icon" value="${escapeHtml(item.icon || '🧘')}" maxlength="4"></div>
+          <div class="form-group"><label class="form-label">Short description</label>
+            <input class="form-input" id="f-desc" value="${escapeHtml(item.description)}" placeholder="e.g. Clear your mind before an exam"></div>
+          <div class="form-group"><label class="form-label">Steps (one per line)</label>
+            <textarea class="form-input" id="f-steps" style="min-height:100px;">${escapeHtml(steps)}</textarea></div>
+          <div class="form-group"><label class="form-label">Background sound URL</label>
+            <input class="form-input" id="f-sound" value="${escapeHtml(item.sound_url)}" placeholder="https://...mp3"></div>
+          <div class="form-group"><label class="form-label">Accent color</label>
+            <input class="form-input" type="color" id="f-color" value="${item.stroke_color || '#2D9B6A'}" style="height:44px; padding:4px;"></div>`;
+      }
+      return '';
+    }
+
+    function decodePhases(phases) {
+      let inhale = 4, hold1 = 0, exhale = 6, hold2 = 0, seenOut = false;
+      (phases || []).forEach(p => {
+        if (p.text === 'Breathe In') inhale = Number(p.dur) || inhale;
+        else if (p.text === 'Breathe Out') { exhale = Number(p.dur) || exhale; seenOut = true; }
+        else if (p.text === 'Hold') { if (!seenOut) hold1 = Number(p.dur) || 0; else hold2 = Number(p.dur) || 0; }
+      });
+      return { inhale, hold1, exhale, hold2 };
+    }
+
+    // ── Save (add or update) ──────────────────────
+    async function saveItem() {
+      const fd = new FormData();
+      fd.append('table', currentTable);
+
+      if (currentTable === 'music_tracks') {
+        const title = document.getElementById('f-title').value.trim();
+        const audio = document.getElementById('f-audio').value.trim();
+        if (!title || !audio) { alert('Title and audio URL are required.'); return; }
+        fd.append('action', editingId ? 'update_music' : 'add_music');
+        if (editingId) fd.append('id', editingId);
+        fd.append('title', title);
+        fd.append('category', document.getElementById('f-category').value);
+        fd.append('cover_url', document.getElementById('f-cover').value.trim());
+        fd.append('audio_url', audio);
+      }
+
+      if (currentTable === 'relaxation_exercises') {
+        const name = document.getElementById('f-name').value.trim();
+        const inhale = document.getElementById('f-inhale').value;
+        const exhale = document.getElementById('f-exhale').value;
+        if (!name) { alert('Name is required.'); return; }
+        fd.append('action', editingId ? 'update_exercise' : 'add_exercise');
+        if (editingId) fd.append('id', editingId);
+        fd.append('name', name);
+        fd.append('icon', document.getElementById('f-icon').value.trim() || '🌬');
+        fd.append('description', document.getElementById('f-desc').value.trim());
+        fd.append('inhale_sec', inhale);
+        fd.append('hold_sec', document.getElementById('f-hold1').value);
+        fd.append('exhale_sec', exhale);
+        fd.append('hold2_sec', document.getElementById('f-hold2').value);
+      }
+
+      if (currentTable === 'meditation_types') {
+        const name = document.getElementById('f-name').value.trim();
+        if (!name) { alert('Name is required.'); return; }
+        fd.append('action', editingId ? 'update_meditation' : 'add_meditation');
+        if (editingId) fd.append('id', editingId);
+        fd.append('name', name);
+        fd.append('icon', document.getElementById('f-icon').value.trim() || '🧘');
+        fd.append('description', document.getElementById('f-desc').value.trim());
+        fd.append('steps_raw', document.getElementById('f-steps').value);
+        fd.append('sound_url', document.getElementById('f-sound').value.trim());
+        fd.append('stroke_color', document.getElementById('f-color').value);
+      }
+
+      try {
+        const res  = await fetch(API, { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.success) { closeModal(); loadList(); }
+        else { alert('Error: ' + (data.error || 'Could not save.')); }
+      } catch {
+        alert('Network error — make sure XAMPP is running.');
+      }
+    }
+
+    async function deleteItem(id) {
+      if (!confirm('Hide this from students? You can restore it anytime.')) return;
+      const fd = new FormData();
+      fd.append('action', 'delete');
+      fd.append('table', currentTable);
+      fd.append('id', id);
+      await fetch(API, { method: 'POST', body: fd });
+      loadList();
+    }
+
+    async function restoreItem(id) {
+      const fd = new FormData();
+      fd.append('action', 'restore');
+      fd.append('table', currentTable);
+      fd.append('id', id);
+      await fetch(API, { method: 'POST', body: fd });
+      loadList();
+    }
+
+    loadList();
+
+    /* ══════════════════════════════════════
+       PREVIEW AS STUDENT
+       Pulls the exact same read-only endpoints the student
+       relaxation pages use, and renders them the way a student sees them.
+    ══════════════════════════════════════ */
+    const PREVIEW_API = '../../../backend/api/relaxation';
+
+    function openStudentPreview() {
+      document.getElementById('preview-modal').style.display = 'flex';
+      loadPreviewContent();
+    }
+    function closeStudentPreview() {
+      document.getElementById('preview-modal').style.display = 'none';
+    }
+
+    async function loadPreviewContent() {
+      const box = document.getElementById('preview-body');
+      box.innerHTML = '<p class="text-muted text-center" style="padding:2rem;">Loading student view…</p>';
+      try {
+        const [bRes, mRes, medRes] = await Promise.all([
+          fetch(`${PREVIEW_API}/breathing.php`),
+          fetch(`${PREVIEW_API}/music.php`),
+          fetch(`${PREVIEW_API}/meditation.php`)
+        ]);
+        const breathing   = (await bRes.json()).exercises || [];
+        const music       = (await mRes.json()).tracks     || [];
+        const meditations = (await medRes.json()).types     || [];
+
+        let html = '';
+
+        // ── Breathing ──
+        html += `<h3 style="font-family:var(--serif);font-size:1.15rem;margin:0 0 .75rem;">🌬 Breathing Exercises <span class="badge badge-beige">${breathing.length}</span></h3>`;
+        if (!breathing.length) {
+          html += `<p class="text-muted" style="margin-bottom:1.5rem;">No breathing exercises yet — students see nothing here.</p>`;
+        } else {
+          html += `<div class="grid-3" style="margin-bottom:1.75rem;">`;
+          breathing.forEach(e => {
+            const phases = Array.isArray(e.phases) ? e.phases.map(p => `${p.text} ${p.dur}s`).join(' → ') : '';
+            html += `<div class="relax-card" onclick="window.open('../student/relaxation/breathing.html','_blank')" style="cursor:pointer;"><div class="relax-card-body">
+              <div class="relax-icon">${e.icon || '🌬'}</div>
+              <h3>${escapeHtml(e.name)}</h3>
+              <p>${escapeHtml(e.description || '')}</p>
+              <p class="text-muted" style="font-size:11.5px;margin-top:.4rem;">${escapeHtml(phases)}</p>
+            </div></div>`;
+          });
+          html += `</div>`;
+        }
+
+        // ── Music ──
+        html += `<h3 style="font-family:var(--serif);font-size:1.15rem;margin:0 0 .75rem;">🎵 Calm Music <span class="badge badge-beige">${music.length}</span></h3>`;
+        if (!music.length) {
+          html += `<p class="text-muted" style="margin-bottom:1.5rem;">No music tracks yet.</p>`;
+        } else {
+          html += `<div class="grid-3" style="margin-bottom:1.75rem;">`;
+          music.forEach(t => {
+            const cover = t.cover_url
+              ? `<img class="relax-card-img" src="${escapeAttr(t.cover_url)}" alt="" style="height:110px;">`
+              : `<div class="relax-card-img" style="height:110px;display:flex;align-items:center;justify-content:center;font-size:2rem;background:var(--mint-pale);">🎵</div>`;
+            html += `<div class="relax-card" onclick="window.open('../student/relaxation/music.html','_blank')" style="cursor:pointer;">${cover}<div class="relax-card-body">
+              <h3>${escapeHtml(t.title)}</h3>
+              <p><span class="badge badge-mint">${escapeHtml(t.category || 'calm')}</span></p>
+            </div></div>`;
+          });
+          html += `</div>`;
+        }
+
+        // ── Meditation ──
+        html += `<h3 style="font-family:var(--serif);font-size:1.15rem;margin:0 0 .75rem;">🧘 Guided Meditations <span class="badge badge-beige">${meditations.length}</span></h3>`;
+        if (!meditations.length) {
+          html += `<p class="text-muted">No meditations yet.</p>`;
+        } else {
+          html += `<div class="grid-3">`;
+          meditations.forEach(m => {
+            const steps = Array.isArray(m.steps) ? m.steps.length : 0;
+            html += `<div class="relax-card" onclick="window.open('../student/relaxation/timer.html','_blank')" style="cursor:pointer;"><div class="relax-card-body">
+              <div class="relax-icon">${m.icon || '🧘'}</div>
+              <h3>${escapeHtml(m.name)}</h3>
+              <p>${escapeHtml(m.description || '')}</p>
+              <p class="text-muted" style="font-size:11.5px;margin-top:.4rem;">${steps} step${steps===1?'':'s'}</p>
+            </div></div>`;
+          });
+          html += `</div>`;
+        }
+
+        box.innerHTML = html;
+      } catch (err) {
+        box.innerHTML = `<p class="text-center" style="color:var(--red);padding:2rem;">Could not load student view. ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function escapeAttr(s) { return escapeHtml(s); }
+  </script>
+
+  <!-- ── STUDENT PREVIEW MODAL ── -->
+  <div id="preview-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:900px;">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:.35rem;">
+        <div>
+          <h3><i class="bi bi-eye-fill"></i> Student View — Relaxation Zone</h3>
+          <p class="modal-sub" style="margin-bottom:0;">Exactly what students see. Click any card to open the student page in a new tab.</p>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="closeStudentPreview()" style="flex-shrink:0;"><i class="bi bi-x-lg"></i> Close</button>
+      </div>
+      <hr class="divider">
+      <div id="preview-body"></div>
+    </div>
+  </div>
+</body>
+</html>

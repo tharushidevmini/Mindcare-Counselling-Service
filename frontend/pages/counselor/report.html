@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/counselor/report.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Report — MindCare Counselor</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/counselor.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <style>
+    .report-page { max-width: 800px; margin: 0 auto; background: var(--white); padding: 3rem; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .report-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid var(--color-orange); padding-bottom: 1.25rem; margin-bottom: 1.75rem; }
+    .report-header h1 { font-family: var(--serif); font-size: 1.5rem; margin-bottom: .25rem; }
+    .report-meta { text-align: right; font-size: 12px; color: var(--text-3); }
+    .report-section { margin-bottom: 1.75rem; }
+    .report-section h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--orange-dark); font-weight: 700; margin-bottom: .75rem; padding-bottom: .4rem; border-bottom: 1px solid var(--beige-dark); }
+    .report-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .75rem; }
+    .report-stat { background: var(--beige-light); border-radius: 10px; padding: .85rem; text-align: center; }
+    .report-stat .val { font-size: 1.4rem; font-weight: 800; color: var(--text); }
+    .report-stat .lbl { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+    .report-stat.stat-hero { background: linear-gradient(135deg, var(--orange-pale), #FEF8EC); box-shadow: inset 0 0 0 1.5px rgba(245,168,70,.35); }
+    .report-stat.stat-hero .val { color: var(--orange-dark); font-size: 1.7rem; }
+    .report-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .report-table th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-3); padding: .4rem .5rem; border-bottom: 1.5px solid var(--beige-dark); }
+    .report-table td { padding: .5rem; border-bottom: 1px solid var(--beige-light); }
+    .report-notes-box { background: var(--beige-light); border-left: 3px solid var(--color-orange); padding: 1rem; border-radius: 8px; font-size: 13.5px; white-space: pre-wrap; line-height: 1.7; }
+    .confidential-banner { background: var(--orange-pale); border: 1px solid var(--color-orange); color: var(--orange-dark); font-size: 12px; font-weight: 600; text-align: center; padding: .6rem; border-radius: 8px; margin-bottom: 1.5rem; }
+    .no-print { margin-bottom: 1rem; }
+
+    @media print {
+      body { background: white; }
+      .top-nav, .sidebar, .no-print { display: none !important; }
+      .layout { display: block !important; }
+      .main { padding: 0 !important; }
+      .report-page { box-shadow: none; max-width: 100%; padding: 0; }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav no-print">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <div class="avatar" id="user-avatar">C</div>
+      <span id="user-name" style="font-weight:600;">Counselor</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar no-print">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Counselor Panel</div>
+        <a href="dashboard.html"     class="sidebar-link"><span class="link-icon"><i class="bi bi-calendar3"></i></span> Appointments</a>
+        <a href="alerts.html"        class="sidebar-link"><span class="link-icon"><i class="bi bi-exclamation-triangle-fill"></i></span> Student Alerts</a>
+        <a href="resources.html"     class="sidebar-link"><span class="link-icon"><i class="bi bi-upload"></i></span> Resource Manager</a>
+        <a href="diary-review.html"  class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-text"></i></span> Shared Diaries</a>
+        <a href="../public/index.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-house-door-fill"></i></span> Home</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="no-print" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <div class="page-header" style="margin-bottom:0;">
+          <h1>Student Report <i class="bi bi-file-earmark-text"></i></h1>
+          <p>A confidential summary you can save as a PDF or print</p>
+        </div>
+        <div style="display:flex; gap:.5rem;">
+          <button class="btn btn-ghost" onclick="downloadReport()">⬇ Download (HTML)</button>
+          <button class="btn btn-primary" onclick="window.print()"><i class="bi bi-printer-fill"></i> Save as PDF / Print</button>
+        </div>
+      </div>
+
+      <div id="report-container">
+        <div class="report-page"><p style="text-align:center; color:#aaa;">Loading report…</p></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/auth.js"></script>
+  <script>
+    const params    = new URLSearchParams(window.location.search);
+    const studentId = params.get('student_id');
+    const API = window.location.origin + '/mindcare_final/backend/api/counselor/student_report.php';
+
+    async function loadReport() {
+      const box = document.getElementById('report-container');
+      if (!studentId) { box.innerHTML = '<div class="report-page"><p>No student selected.</p></div>'; return; }
+
+      try {
+        const res  = await fetch(`${API}?student_id=${studentId}`);
+        const data = await res.json();
+        if (data.error) { box.innerHTML = `<div class="report-page"><p>${data.error}</p></div>`; return; }
+
+        const s = data.student;
+        const a = data.appointments;
+        const p = data.phq;
+        const d = data.diary;
+        const avg = (v) => v ? Number(v).toFixed(1) : '—';
+
+        box.innerHTML = `
+          <div class="report-page">
+            <div class="confidential-banner"><i class="bi bi-lock-fill"></i> CONFIDENTIAL — For counseling records only. Not for distribution.</div>
+
+            <div class="report-header">
+              <div>
+                <h1>MindCare Student Report</h1>
+                <div style="font-size:13px; color:var(--text-3);">LNBTI Campus Counseling Services</div>
+              </div>
+              <div class="report-meta">
+                Generated: ${data.generated_at}<br>
+                By: <span id="report-counselor-name">Counselor</span>
+              </div>
+            </div>
+
+            <div class="report-section">
+              <h2>Student Information</h2>
+              <div class="report-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div><strong>${escapeHtml(s.full_name)}</strong><br><span style="font-size:12px; color:var(--text-3);">${escapeHtml(s.student_id || '—')}</span></div>
+                <div>${escapeHtml(s.email)}<br><span style="font-size:12px; color:var(--text-3);">Member since ${s.created_at.split(' ')[0]}</span></div>
+              </div>
+            </div>
+
+            <div class="report-section">
+              <h2>PHQ-9 Wellbeing Snapshot (last 30 days, ${p.total || 0} check-in${(p.total==1)?'':'s'})</h2>
+              ${(p.total > 0) ? `
+              <div class="report-grid">
+                <div class="report-stat stat-hero"><div class="val">${avg(p.avg_score)}</div><div class="lbl">Avg Score (0–27)</div></div>
+                <div class="report-stat"><div class="val">${sevBadge(p.avg_band)}</div><div class="lbl">Avg Severity</div></div>
+                <div class="report-stat"><div class="val">${p.latest_score ?? '—'}</div><div class="lbl">Latest Score</div></div>
+                <div class="report-stat"><div class="val">${sevBadge(p.latest_band)}</div><div class="lbl">Latest Severity</div></div>
+                <div class="report-stat"><div class="val">${(p.min_score ?? '—')}–${(p.max_score ?? '—')}</div><div class="lbl">Score Range</div></div>
+                <div class="report-stat"><div class="val">${d.total || 0}</div><div class="lbl">Diary Entries (${d.shared || 0} shared)</div></div>
+              </div>
+              <p style="font-size:11.5px; color:var(--text-3); margin-top:.75rem;">PHQ-9 bands: 0–4 Minimal · 5–9 Mild · 10–14 Moderate · 15–19 Moderately severe · 20–27 Severe. Screening tool only — not a clinical diagnosis.</p>
+              ` : `
+              <p style="color:var(--text-3);">No PHQ-9 check-ins recorded in the last 30 days.</p>
+              <div class="report-grid" style="margin-top:1rem;">
+                <div class="report-stat"><div class="val">${d.total || 0}</div><div class="lbl">Diary Entries (${d.shared || 0} shared)</div></div>
+              </div>
+              `}
+            </div>
+
+            <div class="report-section">
+              <h2>Counseling Sessions</h2>
+              <div class="report-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom:1rem;">
+                <div class="report-stat"><div class="val">${a.counts.completed || 0}</div><div class="lbl">Completed</div></div>
+                <div class="report-stat"><div class="val">${a.counts.accepted || 0}</div><div class="lbl">Upcoming</div></div>
+                <div class="report-stat"><div class="val">${a.counts.cancelled || 0}</div><div class="lbl">Cancelled</div></div>
+                <div class="report-stat"><div class="val">${a.counts.pending || 0}</div><div class="lbl">Pending</div></div>
+              </div>
+              <table class="report-table">
+                <thead><tr><th>Date</th><th>Time</th><th>Mode</th><th>Status</th></tr></thead>
+                <tbody>
+                  ${a.recent.length ? a.recent.map(r => `<tr><td>${r.preferred_date}</td><td>${r.preferred_time}</td><td>${r.session_type}</td><td>${r.status}</td></tr>`).join('') : '<tr><td colspan="4" style="text-align:center; color:#aaa;">No sessions yet</td></tr>'}
+                </tbody>
+              </table>
+            </div>
+
+            <div class="report-section">
+              <h2>Risk Alert History</h2>
+              ${data.risk_alerts.length ? `
+                <table class="report-table">
+                  <thead><tr><th>Date</th><th>Severity</th><th>Status</th></tr></thead>
+                  <tbody>
+                    ${data.risk_alerts.map(r => `<tr><td>${r.created_at.split(' ')[0]}</td><td style="text-transform:capitalize;">${r.severity}</td><td style="text-transform:capitalize;">${r.status}</td></tr>`).join('')}
+                  </tbody>
+                </table>` : '<p style="color:var(--text-3); font-size:13px;">No risk alerts on record — no concerning keywords detected in shared entries.</p>'}
+            </div>
+
+            <div class="report-section">
+              <h2>Your Private Session Notes</h2>
+              ${(data.notes && data.notes.length) ? data.notes.map(n => `<div class="report-notes-box" style="margin-bottom:.6rem;"><div style="font-size:11px; color:var(--text-3); margin-bottom:.35rem;"><i class="bi bi-calendar3"></i> ${n.created_at}</div>${escapeHtml(n.notes)}</div>`).join('')
+                            : '<p style="color:var(--text-3); font-size:13px;">No private notes recorded yet.</p>'}
+            </div>
+
+            <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--beige-light); font-size:11px; color:var(--text-3); text-align:center;">
+              This report was generated from MindCare records for internal counseling use only. Student diary content is never included to preserve student privacy.
+            </div>
+          </div>`;
+
+        const nameEl = document.getElementById('report-counselor-name');
+        const authName = document.getElementById('user-name')?.textContent;
+        if (nameEl && authName) nameEl.textContent = authName;
+
+      } catch (e) {
+        box.innerHTML = '<div class="report-page"><p>Network error — could not load report.</p></div>';
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+
+    // Colour-coded severity badge for the report
+    function sevBadge(band) {
+      const b = String(band || '').toLowerCase();
+      let color = '#8C7060', bg = '#F4F1EC';           // default / no data
+      if (b.includes('minimal'))        { color = '#1A7A48'; bg = '#E3F5EA'; }
+      else if (b.includes('mild'))      { color = '#8a6d1a'; bg = '#FBF3D9'; }
+      else if (b.includes('moderately')) { color = '#9C4221'; bg = '#FBE4D5'; }
+      else if (b.includes('moderate'))  { color = '#B45309'; bg = '#FEF0DC'; }
+      else if (b.includes('severe'))    { color = '#9B2C2C'; bg = '#FBE0E0'; }
+      return `<span style="display:inline-block; padding:3px 12px; border-radius:999px; background:${bg}; color:${color}; font-size:.95rem; font-weight:700;">${escapeHtml(band || '—')}</span>`;
+    }
+
+    // Download the rendered report as a self-contained, fully-styled HTML file.
+    // We inline the design tokens (CSS variables) so it looks identical offline,
+    // without needing global.css.
+    function downloadReport() {
+      const page = document.querySelector('.report-page');
+      if (!page) { alert('Nothing to download yet.'); return; }
+      const pageStyles = document.querySelector('style')?.innerHTML || '';
+      const tokens = `:root{
+        --color-orange:#F5A846; --orange-dark:#D4841A; --orange-pale:#FEF3DF;
+        --beige-light:#F6F0E8; --beige-dark:#D4C2A6;
+        --text:#1C1410; --text-2:#4A3728; --text-3:#8C7060;
+        --white:#FFFFFF; --red:#E05A3A;
+        --border:rgba(233,219,196,0.8); --shadow:0 4px 24px rgba(28,20,16,0.08);
+        --radius:20px; --radius-sm:12px; --radius-xs:8px;
+        --font:'Inter',system-ui,sans-serif; --serif:'Georgia',serif;
+      }`;
+      const html =
+        '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+        '<title>MindCare Student Report</title>' +
+        '<style>' + tokens +
+        'body{font-family:var(--font);background:#EFE9E2;margin:0;padding:30px;}' +
+        pageStyles + '</style></head><body>' +
+        page.outerHTML + '</body></html>';
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url  = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'MindCare_Report_' + (studentId || 'student') + '_' + new Date().toISOString().slice(0,10) + '.html';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    loadReport();
+  </script>
+</body>
+</html>
