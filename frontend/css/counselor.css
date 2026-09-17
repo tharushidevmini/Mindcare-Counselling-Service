@@ -1,0 +1,5 @@
+/* ═══════════════════════════════════════════
+   FILE: frontend/css/counselor.css
+   Extra styles only used on Counselor pages
+   ═══════════════════════════════════════════ */
+.alert-badge-pulse { animation: pulse 2s infinite; }

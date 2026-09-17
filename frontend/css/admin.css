@@ -1,0 +1,5 @@
+/* ═══════════════════════════════════════════
+   FILE: frontend/css/admin.css
+   Extra styles only used on Admin pages
+   ═══════════════════════════════════════════ */
+.admin-section-title { font-family: var(--serif); font-size: 1.1rem; color: var(--text); margin-bottom: .75rem; }

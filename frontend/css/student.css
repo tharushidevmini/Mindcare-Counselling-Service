@@ -1,0 +1,5 @@
+/* ═══════════════════════════════════════════
+   FILE: frontend/css/student.css
+   Extra styles only used on Student pages
+   ═══════════════════════════════════════════ */
+.booking-summary-detail strong { color: var(--text); }
