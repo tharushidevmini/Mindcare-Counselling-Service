@@ -1,0 +1,11 @@
+# Never commit sensitive backups
+database/backups/*.sql
+!database/backups/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+*.log
