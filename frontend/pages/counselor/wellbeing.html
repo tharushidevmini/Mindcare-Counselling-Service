@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<!-- FILE: frontend/pages/counselor/wellbeing.html -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Wellbeing — MindCare Counselor</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <link rel="stylesheet" href="../../css/counselor.css">
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare">
+      <div><div class="logo-text">MindCare</div></div>
+    </div>
+    <div class="nav-user">
+      <a href="../public/index.html" class="btn btn-ghost btn-sm"><i class="bi bi-house-door-fill"></i> Home</a>
+      <span id="alert-badge" class="badge badge-red">🔴 Risk Alerts <span class="notif-dot"></span></span>
+      <div class="avatar" id="user-avatar">C</div>
+      <span id="user-name" style="font-weight:600;">Counselor</span>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Counselor Panel</div>
+        <a href="dashboard.html"    class="sidebar-link"><span class="link-icon"><i class="bi bi-calendar3"></i></span> Appointments</a>
+        <a href="alerts.html"       class="sidebar-link"><span class="link-icon"><i class="bi bi-exclamation-triangle-fill"></i></span> Student Alerts <span class="notif-dot"></span></a>
+        <a href="resources.html"    class="sidebar-link"><span class="link-icon"><i class="bi bi-upload"></i></span> Resource Manager</a>
+        <a href="diary-review.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-text"></i></span> Shared Diaries</a>
+        <a href="wellbeing.html"    class="sidebar-link active"><span class="link-icon"><i class="bi bi-compass"></i></span> Student Wellbeing</a>
+        <a href="diary.html" class="sidebar-link"><span class="link-icon"><i class="bi bi-journal-bookmark"></i></span> My Notes</a>
+      </div>
+    </nav>
+
+    <main class="main">
+      <div class="page-header">
+        <h1>Student Wellbeing <i class="bi bi-compass"></i></h1>
+        <p>PHQ-9 daily check-in trends — never includes diary or personal writing, only structured screening scores</p>
+      </div>
+
+      <div class="card" style="margin-bottom:1.25rem;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Select Student</label>
+          <select class="form-input form-select searchable" id="student-select">
+            <option value="">— Select a student —</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="wellbeing-content" style="display:none;">
+        <div class="grid-3" style="margin-bottom:1.25rem;">
+          <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-bar-chart-fill"></i></div>
+            <div class="stat-label">Average PHQ-9 Score</div>
+            <div class="stat-value" id="wb-avg">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-compass"></i></div>
+            <div class="stat-label">Latest Severity</div>
+            <div class="stat-value" id="wb-severity">—</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-label">Check-ins Logged</div>
+            <div class="stat-value" id="wb-count">—</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">PHQ-9 Trend — Month by Month</div>
+          <div id="wb-chart"></div>
+        </div>
+      </div>
+
+      <div id="wb-empty" style="text-align:center; padding:3rem; color:#aaa;">
+        Select a student above to view their wellbeing trend.
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/auth.js?v=5"></script>
+  <script src="../../js/searchable-select.js"></script>
+  <script src="../../js/main.js"></script>
+  <script>
+    const API = window.location.origin + '/mindcare_final/backend/api';
+
+    async function loadStudentOptions() {
+      const res  = await fetch(`${API}/appointments/assign_emergency.php?action=students`);
+      const data = await res.json();
+      const sel  = document.getElementById('student-select');
+      sel.innerHTML = '<option value="">— Select a student —</option>' +
+        (data.students || []).map(s => `<option value="${s.id}">${s.full_name}${s.student_id ? ' (' + s.student_id + ')' : ''}</option>`).join('');
+    }
+
+    document.getElementById('student-select').addEventListener('change', async function() {
+      const id = this.value;
+      if (!id) {
+        document.getElementById('wellbeing-content').style.display = 'none';
+        document.getElementById('wb-empty').style.display = 'block';
+        return;
+      }
+      const res  = await fetch(`${API}/counselor/student_wellbeing.php?student_id=${id}`);
+      const data = await res.json();
+      if (data.error) { alert(data.error); return; }
+
+      document.getElementById('wb-empty').style.display = 'none';
+      document.getElementById('wellbeing-content').style.display = 'block';
+
+      document.getElementById('wb-avg').textContent = data.average ?? '—';
+      document.getElementById('wb-count').textContent = data.total_checkins;
+      const last = [...data.records].reverse().find(r => r.severity);
+      document.getElementById('wb-severity').textContent = last ? last.severity : '—';
+
+      renderChart(data.records);
+    });
+
+    function renderChart(records) {
+      const chart = document.getElementById('wb-chart');
+
+      // Only chart check-ins that actually have a PHQ-9 score
+      records = records.filter(r => r.total_score !== null && r.total_score !== undefined && r.total_score !== '');
+
+      if (records.length === 0) {
+        chart.innerHTML = '<p style="color:#aaa; text-align:center; padding:2rem;">No PHQ-9 check-ins recorded yet for this student.</p>';
+        return;
+      }
+
+      const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      const zoneColor = s => s <= 4 ? '#2D9B6A' : s <= 9 ? '#3B82C4' : s <= 14 ? '#F5A846' : '#DC4C4C';
+      const bands = [
+        { from: 0, to: 4,  color: 'rgba(45,155,106,0.09)' },
+        { from: 4, to: 9,  color: 'rgba(59,130,196,0.10)' },
+        { from: 9, to: 14, color: 'rgba(245,168,70,0.14)' },
+        { from: 14,to: 27, color: 'rgba(220,76,76,0.11)' },
+      ];
+
+      const dates = records.map(r => new Date(r.checkin_date + 'T00:00:00'));
+      const scores = records.map(r => +r.total_score);
+      const ids = records.map(r => r.id);
+
+      const first = dates[0], last = dates[dates.length - 1];
+      const startMonth = new Date(first.getFullYear(), first.getMonth(), 1);
+      const endMonth   = new Date(last.getFullYear(), last.getMonth() + 1, 1);
+      const totalDays  = Math.max((endMonth - startMonth) / 86400000, 1);
+
+      // One continuous timeline, ~14px per day, scrollable sideways —
+      // never separated into disconnected boxes, so the trend is one line.
+      const PX_PER_DAY = 14;
+      const PAD_L = 46, PAD_R = 30, PAD_T = 18, PAD_B = 54;
+      const plotW = Math.max(totalDays * PX_PER_DAY, 500);
+      const W = plotW + PAD_L + PAD_R;
+      const H = 280, plotH = H - PAD_T - PAD_B, maxScore = 27;
+
+      const dayOf = d => (d - startMonth) / 86400000;
+      const x = d => PAD_L + (dayOf(d) / totalDays) * plotW;
+      const y = s => PAD_T + plotH - (s / maxScore) * plotH;
+
+      const bandRects = bands.map(b => `<rect x="${PAD_L}" y="${y(b.to)}" width="${plotW}" height="${y(b.from)-y(b.to)}" fill="${b.color}"/>`).join('');
+
+      // Month gridlines + labels
+      let monthLines = '', monthLabels = '';
+      for (let m = new Date(startMonth); m < endMonth; m.setMonth(m.getMonth() + 1)) {
+        const mx = x(m);
+        monthLines += `<line x1="${mx}" y1="${PAD_T}" x2="${mx}" y2="${PAD_T+plotH}" stroke="#e3e3e3" stroke-width="1"/>`;
+        const nextM = new Date(m.getFullYear(), m.getMonth() + 1, 1);
+        const midX = (mx + x(nextM > endMonth ? endMonth : nextM)) / 2;
+        monthLabels += `<text x="${midX}" y="${H-14}" font-size="12" font-weight="700" fill="var(--text-2)" text-anchor="middle">${monthNames[m.getMonth()]} ${m.getFullYear()}</text>`;
+      }
+
+      // Day-of-month tick label directly under every check-in point
+      const dayLabels = dates.map((d, i) => `<text x="${x(d)}" y="${PAD_T+plotH+16}" font-size="9.5" font-weight="600" fill="var(--text-3)" text-anchor="middle">${d.getDate()}</text>`).join('');
+
+      let pathD = '';
+      dates.forEach((d, i) => { pathD += `${i === 0 ? 'M' : 'L'}${x(d)},${y(scores[i])} `; });
+
+      const dots = dates.map((d, i) => `<circle cx="${x(d)}" cy="${y(scores[i])}" r="6" fill="${zoneColor(scores[i])}" stroke="white" stroke-width="2.5"><title>${d.toISOString().slice(0,10)}: score ${scores[i]}</title></circle>`).join('');
+      const yLabels = [0,9,18,27].map(v => `<text x="${PAD_L-10}" y="${y(v)+4}" font-size="11" font-weight="700" fill="var(--text-2)" text-anchor="end">${v}</text>`).join('');
+      const zoneNames = [
+        { label: 'Minimal',  mid: 2,   color: '#2D9B6A' },
+        { label: 'Mild',     mid: 6.5, color: '#3B82C4' },
+        { label: 'Moderate', mid: 11.5,color: '#D9860F' },
+        { label: 'Severe',   mid: 20.5,color: '#DC4C4C' },
+      ];
+      const zoneLabels = zoneNames.map(b => `<text x="${W-PAD_R-6}" y="${y(b.mid)+4}" font-size="10.5" font-weight="700" fill="${b.color}" text-anchor="end" opacity="0.85">${b.label}</text>`).join('');
+
+      chart.innerHTML = `
+        <style>
+          .wb-scroll::-webkit-scrollbar { height: 14px; }
+          .wb-scroll::-webkit-scrollbar-track { background: #eee; border-radius: 7px; }
+          .wb-scroll::-webkit-scrollbar-thumb { background: #b9b9b9; border-radius: 7px; border: 3px solid #eee; }
+          .wb-scroll::-webkit-scrollbar-thumb:hover { background: #9c9c9c; }
+          .wb-scroll { scrollbar-width: auto; scrollbar-color: #b9b9b9 #eee; }
+        </style>
+        <div class="wb-scroll" style="overflow-x:scroll; overflow-y:hidden; border:1px solid var(--border,#eee); border-radius:12px; padding:.5rem;">
+          <svg viewBox="0 0 ${W} ${H}" style="width:${W}px; height:${H}px; display:block;">
+            ${bandRects}${monthLines}${yLabels}
+            <path d="${pathD.trim()}" fill="none" stroke="var(--color-orange)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            ${dots}${dayLabels}${monthLabels}${zoneLabels}
+          </svg>
+        </div>
+        <div style="display:flex; gap:1.25rem; margin-top:.6rem; flex-wrap:wrap;">
+          <span style="font-size:12.5px; font-weight:600; color:var(--text-2);"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#2D9B6A;margin-right:5px;"></span>Minimal</span>
+          <span style="font-size:12.5px; font-weight:600; color:var(--text-2);"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#3B82C4;margin-right:5px;"></span>Mild</span>
+          <span style="font-size:12.5px; font-weight:600; color:var(--text-2);"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#F5A846;margin-right:5px;"></span>Moderate</span>
+          <span style="font-size:12.5px; font-weight:600; color:var(--text-2);"><span style="display:inline-block;width:11px;height:11px;border-radius:50%;background:#DC4C4C;margin-right:5px;"></span>Severe</span>
+        </div>`;
+    }
+
+    loadStudentOptions();
+  </script>
+</body>
+</html>
