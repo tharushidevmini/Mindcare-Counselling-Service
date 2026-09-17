@@ -1,0 +1,11 @@
+﻿.git
+.gitignore
+.dockerignore
+Dockerfile
+docker-compose.yml
+database/backups/*.sql
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+scratch/
