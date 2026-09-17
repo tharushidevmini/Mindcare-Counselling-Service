@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindCare — LNBTI Mental Health Support</title>
+  <link rel="stylesheet" href="../../css/global.css">
+  <style>
+    /* ── Full-bleed photo hero — Mindora style: one photo across the whole
+       section, text sits directly on a left-side light fade (no card/box) ── */
+    .hero-full {
+      position: relative;
+      min-height: 82vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+    }
+    .hero-full-photo {
+      position: absolute;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=1800&q=80');
+      background-size: cover;
+      background-position: center 30%;
+    }
+    .hero-full-fade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg,
+        var(--color-bg) 0%,
+        var(--color-bg) 28%,
+        rgba(253,246,234,0.75) 45%,
+        rgba(253,246,234,0.15) 62%,
+        transparent 75%);
+    }
+    .hero-full-content {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      padding: 3rem 4vw;
+    }
+    @media (max-width: 900px) {
+      .hero-full { min-height: auto; padding: 3rem 0; }
+      .hero-full-fade { background: linear-gradient(180deg, var(--color-bg) 55%, rgba(253,246,234,0.85) 80%, rgba(253,246,234,0.3) 100%); }
+      .hero-full-content { max-width: 100%; padding: 2rem 1.25rem; }
+      .hero-full-content h1 { font-size: 2.1rem; }
+    }
+
+    /* Bigger logo + more polished eyebrow badge */
+    .hero-logo-row img { width: 96px !important; height: 96px !important; border-radius: 20px !important; box-shadow: 0 10px 28px rgba(245,168,70,.35) !important; }
+    .hero-eyebrow {
+      background: #fff !important;
+      box-shadow: 0 4px 16px rgba(28,20,16,0.08) !important;
+      border: 1px solid rgba(152,227,180,.8) !important;
+      padding: 7px 18px !important;
+      font-size: 12.5px !important;
+      text-transform: uppercase !important;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--color-mint);
+      display: inline-block;
+      box-shadow: 0 0 0 3px rgba(152,227,180,.35);
+    }
+
+    /* Footer — plain white instead of peach gradient */
+    .public-footer { background: #fff !important; border-top: 1px solid var(--border) !important; }
+
+    /* Counselor cards — near-white with a soft raised/elevated shadow */
+    #counselor-grid > div {
+      background: #FFFEFC !important;
+      border-color: rgba(245,168,70,0.12) !important;
+      box-shadow: 0 8px 24px rgba(28,20,16,0.06), 0 2px 6px rgba(28,20,16,0.04) !important;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    #counselor-grid > div:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 16px 36px rgba(28,20,16,0.10), 0 4px 10px rgba(28,20,16,0.06) !important;
+    }
+  </style>
+  <link rel="icon" href="../../assets/images/logo.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <nav class="pub-nav">
+    <div class="nav-logo">
+      <img class="logo-img" src="../../assets/images/logo.png" alt="MindCare LNBTI Logo">
+      <div>
+        <div class="logo-text">MindCare</div>
+        <div class="logo-sub">LNBTI Campus</div>
+      </div>
+    </div>
+    <div class="pub-nav-links">
+      <a href="library.html"    class="pub-nav-link">Mental Health Library</a>
+      <a href="relaxation.html" class="pub-nav-link">Relaxation Zone</a>
+      <a href="emergency.html"  class="pub-nav-link">Emergency Help</a>
+      <a href="../login.html"   class="btn btn-primary">Login →</a>
+    </div>
+  </nav>
+
+  <div class="hotline-bar">
+    <strong>24/7 Crisis Lines:</strong>
+    <a href="tel:0112692909" class="hotline-chip">Sumithrayo: 011-2692909</a>
+    <a href="tel:1333" class="hotline-chip">CCCline: 1333</a>
+    <a href="tel:011XXXXXXX" class="hotline-chip">LNBTI Counselor: 011-XXXX</a>
+  </div>
+
+  <section class="hero hero-full">
+    <div class="hero-full-photo"></div>
+    <div class="hero-full-fade"></div>
+    <div class="hero-full-content">
+      <div class="hero-logo-row">
+        <img src="../../assets/images/logo.png" alt="MindCare Logo">
+      </div>
+      <div class="hero-eyebrow">LNBTI Mental Health Support System</div>
+      <h1>One Platform.<br><em>Every Mind</em> Matters.</h1>
+      <p class="hero-desc">MindCare is your private, secure space to track emotional wellness, write your thoughts, book counseling sessions, and find calm — built just for LNBTI students.</p>
+      <div class="hero-btns">
+        <a href="../login.html" class="btn btn-primary btn-lg">Get Started — It's Free →</a>
+      </div>
+      <div class="hero-stats">
+        <div><div class="hero-stat-num">100%</div><div class="hero-stat-label">Private &amp; Encrypted</div></div>
+        <div><div class="hero-stat-num">5</div><div class="hero-stat-label">User Roles Supported</div></div>
+        <div><div class="hero-stat-num">24/7</div><div class="hero-stat-label">Crisis Support Access</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features-section">
+    <div class="section-eyebrow">What's inside</div>
+    <h2 class="section-title">Everything for your<br>wellbeing, in one place</h2>
+    <p class="section-desc">From daily check-ins to confidential counseling, MindCare brings campus mental health support into a single secure platform.</p>
+    <div class="feature-grid">
+      <div class="feature-card" onclick="window.location.href='library.html'" style="cursor:pointer;">
+        <img class="feature-img" src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80" alt="Mental Health Library">
+        <h3>Mental Health Library</h3>
+        <p>Evidence-based articles and videos on stress, anxiety, sleep and more — free to browse, no login required.</p>
+        <div style="margin-top:1rem;"><span class="btn btn-primary btn-sm">Explore Resources →</span></div>
+      </div>
+      <div class="feature-card" onclick="window.location.href='../login.html'" style="cursor:pointer;">
+        <img class="feature-img" src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=600&q=80" alt="Counseling session">
+        <h3>Confidential Counseling</h3>
+        <p>Book physical or online sessions with LNBTI's campus counselors. Slots are checked against your class timetable automatically.</p>
+        <div style="margin-top:1rem;"><span class="btn btn-primary btn-sm">Book Session →</span></div>
+      </div>
+      <div class="feature-card" onclick="window.location.href='relaxation.html'" style="cursor:pointer;">
+        <img class="feature-img" src="https://images.unsplash.com/photo-1545389336-cf090694435e?w=600&q=80" alt="Relaxation and meditation">
+        <h3>Relaxation Zone</h3>
+        <p>Calm music, a meditation timer, and guided breathing exercises whenever you need a moment to reset.</p>
+        <div style="margin-top:1rem;"><span class="btn btn-mint btn-sm">Try Now →</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Meet Our Counselors -->
+  <section style="padding:5rem 6rem; border-bottom:1px solid var(--border);">
+    <div class="section-eyebrow">Our team</div>
+    <h2 class="section-title">Meet Your Counselors</h2>
+    <p class="section-desc">Real LNBTI campus counselors, ready to support you confidentially.</p>
+    <div id="counselor-grid" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.5rem; margin-top:2rem;">
+      <div style="color:#aaa; font-size:14px;">Loading counselors...</div>
+    </div>
+  </section>
+
+  <!-- Student Stories Section -->
+  <section style="background:var(--beige-light); padding:5rem 6rem; border-bottom:1px solid var(--border);">
+    <div class="section-eyebrow">From our students</div>
+    <h2 class="section-title">Student Stories</h2>
+    <p class="section-desc">Anonymous voices from LNBTI campus — shared with counselor approval.</p>
+    <div id="public-posts" class="testimonial-grid">
+      <div style="color:#aaa; font-size:14px;">Loading stories...</div>
+    </div>
+  </section>
+
+  <footer class="public-footer">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand-row">
+          <img src="../../assets/images/logo.png" alt="MindCare">
+          <div class="logo-text" style="color:var(--text);">MindCare</div>
+        </div>
+        <p class="footer-brand-text">A secure, web-based mental health support system built specifically for LNBTI campus students, counselors, guardians, and staff.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="library.html"    class="footer-link">Mental Health Library</a>
+        <a href="relaxation.html" class="footer-link">Relaxation Zone</a>
+        <a href="../login.html"   class="footer-link">Login</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="emergency.html"  class="footer-link">Emergency Contacts</a>
+        <a href="tel:1333"        class="footer-link">CCCline: 1333</a>
+        <a href="tel:0112692909"  class="footer-link">Sumithrayo</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>2025 MindCare — Lanka Nippipon Biztech Institute (LNBTI). All rights reserved.</span>
+      <span>Built by Group 03</span>
+    </div>
+  </footer>
+
+  <script src="../../js/main.js"></script>
+  <script>
+    // Liked posts track කරන්නේ localStorage වලින්
+    const liked = JSON.parse(localStorage.getItem('liked_posts') || '[]');
+
+    async function loadCounselors() {
+      try {
+        const res  = await fetch(window.location.origin + '/mindcare_final/backend/api/public/counselors.php');
+        const data = await res.json();
+        const grid = document.getElementById('counselor-grid');
+        const list = data.counselors || [];
+
+        if (list.length === 0) {
+          grid.innerHTML = '<div style="color:#aaa; font-size:14px;">No counselors listed yet.</div>';
+          return;
+        }
+
+        grid.innerHTML = list.map(c => `
+          <div style="background:#fff; border:1px solid var(--border); border-radius:16px; padding:1.5rem; text-align:center;">
+            ${c.photo_url
+              ? `<img src="${c.photo_url}" alt="${c.full_name}" style="width:96px; height:96px; border-radius:50%; object-fit:cover; margin:0 auto 1rem; display:block;">`
+              : `<div style="width:96px; height:96px; border-radius:50%; background:var(--color-mint); color:#0f5132; font-size:2rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">${c.full_name.charAt(0)}</div>`
+            }
+            <h3 style="margin:0 0 .25rem; font-size:1.05rem;">${c.full_name}</h3>
+            <p style="color:var(--text-3); font-size:12.5px; margin:0 0 .4rem;">${c.specialty || 'General Counseling'}</p>
+            ${c.phone ? `<a href="tel:${c.phone.replace(/\s+/g,'')}" style="color:var(--text-2); font-size:12.5px; font-weight:600; margin:0 0 1rem; text-decoration:none; display:block;"><i class="bi bi-telephone-fill"></i> ${c.phone}</a>` : '<div style="margin-bottom:1rem;"></div>'}
+            <a href="../login.html" class="btn btn-primary btn-sm">Book a Session →</a>
+          </div>`).join('');
+      } catch (err) {
+        document.getElementById('counselor-grid').innerHTML =
+          '<div style="color:#e57373; font-size:14px;">Could not load counselors. Is XAMPP running?</div>';
+      }
+    }
+
+    async function loadPublicPosts() {
+      try {
+        const res  = await fetch(window.location.origin + '/mindcare_final/backend/api/forum/public_posts.php');
+        const data = await res.json();
+        const container = document.getElementById('public-posts');
+
+        if (!data.posts || data.posts.length === 0) {
+          container.innerHTML = `
+            <div class="testimonial-card" style="grid-column:1/-1; text-align:center; padding:3rem;">
+              <div style="font-size:2rem; margin-bottom:.75rem;"><i class="bi bi-chat-dots"></i></div>
+              <p style="color:#aaa; font-size:14px;">No stories yet. Be the first to share!</p>
+              <a href="../login.html" class="btn btn-primary" style="margin-top:1rem;">Login to Share →</a>
+            </div>`;
+          return;
+        }
+
+        const catIcon = {
+          anxiety:       '<i class="bi bi-exclamation-circle-fill"></i>',
+          stress:        '<i class="bi bi-lightning-charge-fill"></i>',
+          relationships: '<i class="bi bi-people-fill"></i>',
+          academic:      '<i class="bi bi-book"></i>',
+          general:       '<i class="bi bi-flower1"></i>',
+        };
+
+        container.innerHTML = data.posts.map(p => {
+          const isLiked   = liked.includes(String(p.id));
+          const icon      = catIcon[p.category] || '<i class="bi bi-flower1"></i>';
+          const dateStr   = new Date(p.created_at).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+          const authorName = p.display_name ? p.display_name : 'Anonymous Student';
+          const authorSub  = (p.category || 'General') + ' · ' + dateStr;
+
+          return `
+            <div class="testimonial-card" style="position:relative;">
+              <p class="testimonial-quote">${p.content}</p>
+              <div class="testimonial-author">
+                <div style="width:40px;height:40px;border-radius:50%;background:var(--color-beige);display:flex;align-items:center;justify-content:center;font-size:18px;">${icon}</div>
+                <div>
+                  <div class="testimonial-name">${authorName}</div>
+                  <div class="testimonial-role">${authorSub}</div>
+                </div>
+              </div>
+              <div style="margin-top:1rem; padding-top:.75rem; border-top:1px solid var(--beige-light); display:flex; align-items:center; gap:.75rem;">
+                <button
+                  id="like-btn-${p.id}"
+                  onclick="toggleLike(${p.id}, this)"
+                  style="
+                    background:${isLiked ? 'var(--orange-pale)' : 'var(--beige-light)'};
+                    border:1.5px solid ${isLiked ? 'var(--color-orange)' : 'var(--color-beige)'};
+                    border-radius:20px; padding:5px 14px;
+                    font-size:12px; font-weight:600; cursor:pointer;
+                    color:${isLiked ? 'var(--orange-dark)' : 'var(--text-3)'};
+                    transition:.2s; display:flex; align-items:center; gap:5px;
+                  ">
+                  ${isLiked ? '<i class="bi bi-heart-fill"></i>' : '<i class="bi bi-heart"></i>'} <span id="like-count-${p.id}">${p.likes || 0}</span>
+                </button>
+                <span style="font-size:11px; color:#bbb;">This helped me too</span>
+              </div>
+            </div>`;
+        }).join('');
+
+      } catch(e) { console.error(e); }
+    }
+
+    function toggleLike(postId, btn) {
+      const idx     = liked.indexOf(String(postId));
+      const isLiked = idx > -1;
+      const countEl = document.getElementById('like-count-' + postId);
+      let count     = parseInt(countEl.textContent) || 0;
+
+      if (isLiked) {
+        liked.splice(idx, 1);
+        count--;
+        btn.style.background   = 'var(--beige-light)';
+        btn.style.borderColor  = 'var(--color-beige)';
+        btn.style.color        = 'var(--text-3)';
+        btn.innerHTML          = '<i class="bi bi-heart"></i> <span id="like-count-' + postId + '">' + count + '</span>';
+      } else {
+        liked.push(String(postId));
+        count++;
+        btn.style.background   = 'var(--orange-pale)';
+        btn.style.borderColor  = 'var(--color-orange)';
+        btn.style.color        = 'var(--orange-dark)';
+        btn.innerHTML          = '<i class="bi bi-heart-fill"></i> <span id="like-count-' + postId + '">' + count + '</span>';
+      }
+
+      localStorage.setItem('liked_posts', JSON.stringify(liked));
+      countEl.textContent = count;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => { loadPublicPosts(); loadCounselors(); });
+  </script>
+</body>
+</html>
